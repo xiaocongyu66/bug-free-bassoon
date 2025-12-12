@@ -1,6 +1,6 @@
 // Cloudflare Worker - ES Module 格式
 import { handleApiRequest } from './api.js';
-import { generateHTML } from './ui.js';
+import { generateHTML, generateApiDocsHTML } from './ui.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -20,6 +20,18 @@ export default {
     }
 
     try {
+      // API 文档页面
+      if (path === '/api-docs' || path === '/api-docs.html') {
+        const html = generateApiDocsHTML(env);
+        return new Response(html, {
+          headers: {
+            'Content-Type': 'text/html;charset=UTF-8',
+            'Cache-Control': 'public, max-age=3600',
+            ...corsHeaders
+          }
+        });
+      }
+      
       // API 路由
       if (path.startsWith('/api/')) {
         return await handleApiRequest(request, env, url);
