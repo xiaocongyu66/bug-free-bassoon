@@ -198,36 +198,24 @@ export function generateHTML(env) {
             color: var(--text-secondary);
             font-size: 14px;
             word-break: break-all;
-        }     
-                
-        /* 改为flex布局，并让右边完全跟随左边 */
+        }
+        
         .repo-content {
-            display: flex;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
             gap: 20px;
             padding: 20px;
-            align-items: stretch; /* 关键：让两个子元素等高 */
         }
         
         @media (max-width: 768px) {
             .repo-content {
-                flex-direction: column;
-            }
-            
-            .latest-release {
-                border-right: none;
-                border-bottom: 1px solid var(--border-color);
-                padding-right: 0;
-                padding-bottom: 20px;
+                grid-template-columns: 1fr;
             }
         }
         
         .latest-release {
-            flex: 2;
             border-right: 1px solid var(--border-color);
             padding-right: 20px;
-            display: flex;
-            flex-direction: column; /* 垂直布局 */
-            min-height: 0; /* 允许收缩 */
         }
         
         .release-title {
@@ -238,7 +226,6 @@ export function generateHTML(env) {
             display: flex;
             align-items: center;
             gap: 10px;
-            flex-shrink: 0; /* 防止标题被压缩 */
         }
         
         .release-tag {
@@ -255,13 +242,10 @@ export function generateHTML(env) {
             margin-bottom: 20px;
             display: flex;
             gap: 15px;
-            flex-shrink: 0; /* 防止元信息被压缩 */
         }
         
         .assets-list {
-            flex: 1; /* 占据剩余空间 */
-            overflow-y: auto;
-            min-height: 0; /* 重要：允许收缩 */
+            margin-top: 20px;
         }
         
         .asset-item {
@@ -318,16 +302,11 @@ export function generateHTML(env) {
         }
         
         .history-section {
-            flex: 1;
             padding: 15px;
             background-color: #fafbfc;
             border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            height: 100%; /* 跟随父容器高度 */
-            min-height: 0; /* 允许收缩 */
         }
-
+        
         .history-title {
             font-size: 16px;
             font-weight: 600;
@@ -336,14 +315,12 @@ export function generateHTML(env) {
             display: flex;
             align-items: center;
             gap: 10px;
-            flex-shrink: 0;
         }
-
-       .history-list {
-           flex: 1;
-           overflow-y: auto;
-           min-height: 0; /* 重要：允许在flex容器中收缩 */
-       }
+        
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
         
         .history-item {
             padding: 10px;
@@ -544,35 +521,51 @@ export function generateHTML(env) {
             box-shadow: var(--shadow);
             display: none;
             z-index: 1001;
+            
+        }
+    .api-docs-link {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: var(--card-bg);
+            transition: all 0.3s;
         }
         
-        /* 自定义滚动条 */
-        .assets-list::-webkit-scrollbar,
-        .history-list::-webkit-scrollbar {
-            width: 6px;
+        .api-docs-link:hover {
+            background-color: var(--bg-color);
+            border-color: var(--secondary-color);
         }
         
-        .assets-list::-webkit-scrollbar-track,
-        .history-list::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
-        }
-        
-        .assets-list::-webkit-scrollbar-thumb,
-        .history-list::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 3px;
-        }
-        
-        .assets-list::-webkit-scrollbar-thumb:hover,
-        .history-list::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
+        @media (max-width: 768px) {
+            .api-docs-link {
+                position: static;
+                margin-top: 15px;
+                align-self: center;
+            }
+            header {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
+            <a href="/api-docs" class="api-docs-link">
+                <i class="fas fa-book"></i>
+                API 文档
+            </a>
             <h1><i class="fas fa-code-branch"></i> GitHub Releases 代理服务</h1>
             <p class="subtitle">快速、稳定地访问 GitHub Releases，支持代理下载和历史版本查看</p>
         </header>
@@ -620,14 +613,15 @@ export function generateHTML(env) {
         </div>
         
         <div class="footer">
-            <p>GitHub Releases Proxy v1.0 • 数据来源：<span id="repoSource">GitHub API</span></p>
-            <p id="apiStatus">API 状态：<span class="status-indicator">检查中...</span></p>
-            <p style="margin-top: 10px;">
-                <a href="/api-docs" style="color: var(--secondary-color); text-decoration: none;">
-                    <i class="fas fa-book"></i> 查看 API 文档
-                </a>
-            </p>
-        </div>
+    <p>GitHub Releases Proxy v1.0 • 数据来源：<span id="repoSource">GitHub API</span></p>
+    <p id="apiStatus">API 状态：<span class="status-indicator">检查中...</span></p>
+    <p style="margin-top: 10px;">
+        <a href="/api-docs" style="color: var(--secondary-color); text-decoration: none;">
+            <i class="fas fa-book"></i> 查看 API 文档
+        </a>
+    </p>
+</div>
+    </div>
     
     <!-- 历史版本详情模态框 -->
     <div id="historyModal" class="modal">
@@ -832,7 +826,7 @@ export function generateHTML(env) {
                         <div class="assets-list">
                             \${latestAssetsHTML}
                         </div>
-                        \` : '<div style="color: var(--text-secondary); text-align: center; padding: 20px; flex: 1;">无发布版本</div>'}
+                        \` : '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">无发布版本</div>'}
                     </div>
                     
                     <div class="history-section">
@@ -1143,16 +1137,15 @@ export function generateHTML(env) {
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
-
+        
         // 工具函数：格式化日期
         function formatDate(dateString) {
-            if (!dateString) return '未知';
             const date = new Date(dateString);
             return date.toLocaleDateString('zh-CN', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          });
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
         }
         
         // 工具函数：格式化时间
