@@ -56,7 +56,172 @@ export async function handleApiRequest(request, env, url) {
     }));
   }
   
+  // Token 状态检查
+  if (path === '/api/tokens/status') {
+    return await getTokenStatus(env);
+  }
+  
   return new Response(JSON.stringify({ error: 'API endpoint not found' }), { status: 404 });
+}
+
+// Token 管理器类
+class TokenManager {
+  constructor(tokensString = '') {
+    this.tokens = tokensString.split(',').map(t => t.trim()).filter(t => t);
+    this.currentIndex = 0;
+    this.tokenStats = {};
+    this.tokens.forEach(token => {
+      this.tokenStats[token.substring(0, 8) + '...'] = {
+        totalRequests: 0,
+        successfulRequests: 0,
+        failedRequests: 0,
+        lastUsed: null,
+        lastError: null
+      };
+    });
+  }
+  
+  // 获取下一个可用的 Token
+  getNextToken() {
+    if (this.tokens.length === 0) {
+      return null;
+    }
+    
+    // 尝试找到可用的 Token
+    const startIndex = this.currentIndex;
+    let attempts = 0;
+    
+    while (attempts < this.tokens.length) {
+      const token = this.tokens[this.currentIndex];
+      const tokenKey = token.substring(0, 8) + '...';
+      
+      this.currentIndex = (this.currentIndex + 1) % this.tokens.length;
+      attempts++;
+      
+      // 检查 Token 是否可用（这里可以根据需要添加更复杂的检查逻辑）
+      if (this.tokenStats[tokenKey].failedRequests < 5) { // 连续失败5次则跳过
+        this.tokenStats[tokenKey].totalRequests++;
+        this.tokenStats[tokenKey].lastUsed = new Date().toISOString();
+        return token;
+      }
+    }
+    
+    return this.tokens[0] || null; // 如果所有Token都失败过，返回第一个
+  }
+  
+  // 记录请求结果
+  recordResult(token, success, error = null) {
+    const tokenKey = token.substring(0, 8) + '...';
+    if (success) {
+      this.tokenStats[tokenKey].successfulRequests++;
+      this.tokenStats[tokenKey].failedRequests = 0; // 重置失败计数
+    } else {
+      this.tokenStats[tokenKey].failedRequests++;
+      this.tokenStats[tokenKey].lastError = error;
+    }
+  }
+  
+  // 获取 Token 状态
+  getStats() {
+    return {
+      totalTokens: this.tokens.length,
+      tokens: this.tokens.map(t => t.substring(0, 8) + '...'),
+      stats: this.tokenStats,
+      currentIndex: this.currentIndex
+    };
+  }
+  
+  // 重置 Token 状态
+  resetToken(token) {
+    const tokenKey = token.substring(0, 8) + '...';
+    if (this.tokenStats[tokenKey]) {
+      this.tokenStats[tokenKey].failedRequests = 0;
+      this.tokenStats[tokenKey].lastError = null;
+    }
+  }
+}
+
+// 获取 Token 状态
+async function getTokenStatus(env) {
+  const tokenManager = new TokenManager(env.GITHUB_TOKENS || '');
+  return new Response(JSON.stringify({
+    success: true,
+    data: tokenManager.getStats(),
+    timestamp: new Date().toISOString()
+  }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache'
+    }
+  });
+}
+
+// 使用 Token 轮询获取数据
+async function fetchWithTokenRotation(url, options, tokenManager) {
+  let lastError = null;
+  
+  // 如果没有 Token，直接请求
+  if (!tokenManager || tokenManager.tokens.length === 0) {
+    const response = await fetch(url, options);
+    if (response.ok) {
+      return response;
+    }
+    throw new Error(`Request failed: ${response.status}`);
+  }
+  
+  // 尝试所有可用的 Token
+  const maxAttempts = Math.min(tokenManager.tokens.length * 2, 10); // 最多尝试10次
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const token = tokenManager.getNextToken();
+    if (!token) break;
+    
+    const tokenKey = token.substring(0, 8) + '...';
+    
+    try {
+      const headers = {
+        ...options.headers,
+        'Authorization': `token ${token}`,
+        'User-Agent': 'GitHub-Releases-Proxy',
+        'Accept': 'application/vnd.github.v3+json'
+      };
+      
+      const response = await fetch(url, { ...options, headers });
+      
+      if (response.status === 401 || response.status === 403) {
+        // Token 无效或被限制
+        tokenManager.recordResult(token, false, `Token ${tokenKey} failed with status ${response.status}`);
+        lastError = new Error(`Token ${tokenKey} failed: ${response.status}`);
+        
+        // 如果是速率限制，等待一段时间
+        const remaining = response.headers.get('X-RateLimit-Remaining');
+        const resetTime = response.headers.get('X-RateLimit-Reset');
+        
+        if (response.status === 403 && remaining === '0') {
+          const resetDate = new Date(resetTime * 1000);
+          const waitTime = resetDate - new Date();
+          if (waitTime > 0 && waitTime < 60000) { // 等待最多60秒
+            await new Promise(resolve => setTimeout(resolve, waitTime + 1000));
+          }
+        }
+        continue;
+      }
+      
+      if (response.ok) {
+        tokenManager.recordResult(token, true);
+        return response;
+      }
+      
+      // 其他错误，不换 Token 直接返回
+      tokenManager.recordResult(token, true); // 认为 Token 是有效的，但请求有误
+      return response;
+      
+    } catch (error) {
+      tokenManager.recordResult(token, false, error.message);
+      lastError = error;
+    }
+  }
+  
+  throw lastError || new Error('All tokens failed');
 }
 
 // 获取仓库列表
@@ -100,11 +265,11 @@ async function getLatestReleases(env) {
     const repos = parseRepoList(repoText);
     
     const results = [];
-    const githubToken = env.GITHUB_TOKEN;
+    const tokenManager = new TokenManager(env.GITHUB_TOKENS || '');
     
     for (const repo of repos.slice(0, 20)) { // 限制最多20个仓库
       try {
-        const releases = await fetchGitHubReleases(repo.owner, repo.repo, githubToken);
+        const releases = await fetchGitHubReleases(repo.owner, repo.repo, tokenManager);
         if (releases && releases.length > 0) {
           const latestRelease = releases[0];
           const historyReleases = releases.slice(1, 6); // 最近5个历史版本
@@ -130,6 +295,7 @@ async function getLatestReleases(env) {
     return new Response(JSON.stringify({
       success: true,
       data: results,
+      tokenStats: tokenManager.getStats(),
       timestamp: new Date().toISOString()
     }), {
       headers: {
@@ -149,8 +315,8 @@ async function getLatestReleases(env) {
 // 获取仓库所有版本
 async function getAllReleases(env, owner, repo) {
   try {
-    const githubToken = env.GITHUB_TOKEN;
-    const releases = await fetchGitHubReleases(owner, repo, githubToken);
+    const tokenManager = new TokenManager(env.GITHUB_TOKENS || '');
+    const releases = await fetchGitHubReleases(owner, repo, tokenManager);
     
     const processedReleases = releases.map(r => 
       processRelease(r, owner, repo, env)
@@ -163,6 +329,7 @@ async function getAllReleases(env, owner, repo) {
         releases: processedReleases,
         count: releases.length
       },
+      tokenStats: tokenManager.getStats(),
       timestamp: new Date().toISOString()
     }), {
       headers: {
@@ -182,8 +349,8 @@ async function getAllReleases(env, owner, repo) {
 // 获取仓库详情
 async function getRepoDetails(env, owner, repo) {
   try {
-    const githubToken = env.GITHUB_TOKEN;
-    const releases = await fetchGitHubReleases(owner, repo, githubToken);
+    const tokenManager = new TokenManager(env.GITHUB_TOKENS || '');
+    const releases = await fetchGitHubReleases(owner, repo, tokenManager);
     
     if (!releases || releases.length === 0) {
       return new Response(JSON.stringify({
@@ -208,6 +375,7 @@ async function getRepoDetails(env, owner, repo) {
         history: historyReleases.map(r => processRelease(r, owner, repo, env)),
         total: releases.length
       },
+      tokenStats: tokenManager.getStats(),
       timestamp: new Date().toISOString()
     }), {
       headers: {
@@ -227,19 +395,15 @@ async function getRepoDetails(env, owner, repo) {
 // 代理下载
 async function proxyDownload(env, owner, repo, assetId, filename) {
   try {
-    const headers = {
-      'Accept': 'application/octet-stream',
-      'User-Agent': 'GitHub-Releases-Proxy'
-    };
+    const tokenManager = new TokenManager(env.GITHUB_TOKENS || '');
+    const url = `https://api.github.com/repos/${owner}/${repo}/releases/assets/${assetId}`;
     
-    if (env.GITHUB_TOKEN) {
-      headers['Authorization'] = `token ${env.GITHUB_TOKEN}`;
-    }
-    
-    const response = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}/releases/assets/${assetId}`,
-      { headers }
-    );
+    const response = await fetchWithTokenRotation(url, {
+      headers: {
+        'Accept': 'application/octet-stream',
+        'User-Agent': 'GitHub-Releases-Proxy'
+      }
+    }, tokenManager);
     
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.status}`);
@@ -286,21 +450,11 @@ function parseRepoList(text) {
     .filter(repo => repo !== null);
 }
 
-// 获取 GitHub Releases
-async function fetchGitHubReleases(owner, repo, token) {
-  const headers = {
-    'User-Agent': 'GitHub-Releases-Proxy',
-    'Accept': 'application/vnd.github.v3+json'
-  };
+// 获取 GitHub Releases（使用 Token 轮询）
+async function fetchGitHubReleases(owner, repo, tokenManager) {
+  const url = `https://api.github.com/repos/${owner}/${repo}/releases`;
   
-  if (token) {
-    headers['Authorization'] = `token ${token}`;
-  }
-  
-  const response = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/releases`,
-    { headers }
-  );
+  const response = await fetchWithTokenRotation(url, {}, tokenManager);
   
   if (!response.ok) {
     if (response.status === 404) {
