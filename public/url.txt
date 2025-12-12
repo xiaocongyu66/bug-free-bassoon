@@ -1,0 +1,6 @@
+https://github.com/FCL-Team/FoldCraftLauncher
+https://github.com/ShirosakiMio/FCLRendererPlugin
+https://github.com/HMCL-dev/HMCL
+https://github.com/Meloong-Git/PCL
+
+https://github.com/LagrangeDev/Lagrange.Core
