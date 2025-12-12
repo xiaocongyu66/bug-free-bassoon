@@ -200,25 +200,34 @@ export function generateHTML(env) {
             word-break: break-all;
         }     
                 
-         /* 改为flex布局，并让右边自适应左边 */
+        /* 改为flex布局，并让右边完全跟随左边 */
         .repo-content {
-             display: flex;
-             gap: 20px;
-             padding: 20px;
-             align-items: flex-start; /* 顶端对齐 */
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            align-items: stretch; /* 关键：让两个子元素等高 */
         }
         
         @media (max-width: 768px) {
             .repo-content {
-                 grid-template-columns: 1fr;
+                flex-direction: column;
+            }
+            
+            .latest-release {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding-right: 0;
+                padding-bottom: 20px;
             }
         }
         
         .latest-release {
-            flex: 2; /* 占据2份宽度 */
+            flex: 2;
             border-right: 1px solid var(--border-color);
             padding-right: 20px;
-            min-height: 300px; /* 设置最小高度 */
+            display: flex;
+            flex-direction: column; /* 垂直布局 */
+            min-height: 0; /* 允许收缩 */
         }
         
         .release-title {
@@ -229,6 +238,7 @@ export function generateHTML(env) {
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0; /* 防止标题被压缩 */
         }
         
         .release-tag {
@@ -245,13 +255,13 @@ export function generateHTML(env) {
             margin-bottom: 20px;
             display: flex;
             gap: 15px;
+            flex-shrink: 0; /* 防止元信息被压缩 */
         }
         
         .assets-list {
-            margin-top: 20px;
-            flex: 1;
+            flex: 1; /* 占据剩余空间 */
             overflow-y: auto;
-            min-height: 0;
+            min-height: 0; /* 重要：允许收缩 */
         }
         
         .asset-item {
@@ -308,11 +318,14 @@ export function generateHTML(env) {
         }
         
         .history-section {
-            flex: 1; /* 占据1份宽度 */
+            flex: 1;
             padding: 15px;
             background-color: #fafbfc;
             border-radius: 6px;
-            height: auto; /* 自动高度 */
+            display: flex;
+            flex-direction: column;
+            height: 100%; /* 跟随父容器高度 */
+            min-height: 0; /* 允许收缩 */
         }
 
         .history-title {
@@ -329,7 +342,7 @@ export function generateHTML(env) {
        .history-list {
            flex: 1;
            overflow-y: auto;
-           min-height: 0; /* 重要：允许容器收缩 */
+           min-height: 0; /* 重要：允许在flex容器中收缩 */
        }
         
         .history-item {
@@ -532,6 +545,29 @@ export function generateHTML(env) {
             display: none;
             z-index: 1001;
         }
+        
+        /* 自定义滚动条 */
+        .assets-list::-webkit-scrollbar,
+        .history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .assets-list::-webkit-scrollbar-track,
+        .history-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .assets-list::-webkit-scrollbar-thumb,
+        .history-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        
+        .assets-list::-webkit-scrollbar-thumb:hover,
+        .history-list::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
     </style>
 </head>
 <body>
@@ -584,14 +620,14 @@ export function generateHTML(env) {
         </div>
         
         <div class="footer">
-    <p>GitHub Releases Proxy v1.0 • 数据来源：<span id="repoSource">GitHub API</span></p>
-    <p id="apiStatus">API 状态：<span class="status-indicator">检查中...</span></p>
-    <p style="margin-top: 10px;">
-        <a href="/api-docs" style="color: var(--secondary-color); text-decoration: none;">
-            <i class="fas fa-book"></i> 查看 API 文档
-        </a>
-    </p>
-</div>
+            <p>GitHub Releases Proxy v1.0 • 数据来源：<span id="repoSource">GitHub API</span></p>
+            <p id="apiStatus">API 状态：<span class="status-indicator">检查中...</span></p>
+            <p style="margin-top: 10px;">
+                <a href="/api-docs" style="color: var(--secondary-color); text-decoration: none;">
+                    <i class="fas fa-book"></i> 查看 API 文档
+                </a>
+            </p>
+        </div>
     
     <!-- 历史版本详情模态框 -->
     <div id="historyModal" class="modal">
@@ -796,7 +832,7 @@ export function generateHTML(env) {
                         <div class="assets-list">
                             \${latestAssetsHTML}
                         </div>
-                        \` : '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">无发布版本</div>'}
+                        \` : '<div style="color: var(--text-secondary); text-align: center; padding: 20px; flex: 1;">无发布版本</div>'}
                     </div>
                     
                     <div class="history-section">
@@ -1151,7 +1187,6 @@ export function generateHTML(env) {
 </body>
 </html>`;
 }
-
 
 // 生成 API 文档页面
 export function generateAPIDocsHTML(env) {
