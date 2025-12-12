@@ -1,4 +1,3 @@
-
 // 生成 HTML 页面
 export function generateHTML(env) {
   const workerUrl = env.WORKER_URL || '';
