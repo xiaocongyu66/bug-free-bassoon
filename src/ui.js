@@ -205,17 +205,21 @@ export function generateHTML(env) {
             grid-template-columns: 2fr 1fr;
             gap: 20px;
             padding: 20px;
+            align-items: stretch; /* 确保两个列等高 */
         }
         
         @media (max-width: 768px) {
             .repo-content {
-                grid-template-columns: 1fr;
+                 grid-template-columns: 1fr;
             }
         }
         
         .latest-release {
-            border-right: 1px solid var(--border-color);
-            padding-right: 20px;
+             border-right: 1px solid var(--border-color);
+             padding-right: 20px;
+             display: flex;
+             flex-direction: column;
+             height: 100%;
         }
         
         .release-title {
@@ -246,6 +250,9 @@ export function generateHTML(env) {
         
         .assets-list {
             margin-top: 20px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
         }
         
         .asset-item {
@@ -305,8 +312,11 @@ export function generateHTML(env) {
             padding: 15px;
             background-color: #fafbfc;
             border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
-        
+
         .history-title {
             font-size: 16px;
             font-weight: 600;
@@ -315,12 +325,14 @@ export function generateHTML(env) {
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
         }
-        
-        .history-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
+
+       .history-list {
+           flex: 1;
+           overflow-y: auto;
+           min-height: 0; /* 重要：允许容器收缩 */
+       }
         
         .history-item {
             padding: 10px;
@@ -1097,15 +1109,16 @@ export function generateHTML(env) {
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
-        
+
         // 工具函数：格式化日期
         function formatDate(dateString) {
+            if (!dateString) return '未知';
             const date = new Date(dateString);
             return date.toLocaleDateString('zh-CN', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          });
         }
         
         // 工具函数：格式化时间
