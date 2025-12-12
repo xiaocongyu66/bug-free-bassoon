@@ -1,0 +1,17 @@
+name = "github-releases-proxy"
+type = "javascript"
+account_id = "your_account_id"
+workers_dev = true
+route = "your-domain.com/*"
+zone_id = "your_zone_id"
+
+[vars]
+GITHUB_TOKEN = "your_github_token"
+REPO_LIST_URL = "your_url_txt_url"
+CACHE_DURATION = "3600"
+
+[build]
+command = "npm run build"
+
+[build.upload]
+format = "service-worker"

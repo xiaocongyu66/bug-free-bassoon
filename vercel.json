@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/releases.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/download.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/releases",
+      "dest": "/api/releases.js"
+    },
+    {
+      "src": "/api/download",
+      "dest": "/api/download.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ],
+  "env": {
+    "GITHUB_TOKEN": "@github_token",
+    "REPO_LIST_URL": "@repo_list_url"
+  }
+}

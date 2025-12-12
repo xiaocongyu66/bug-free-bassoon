@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Releases 代理</title>
+    <style>
+        :root {
+            --primary-color: #24292e;
+            --secondary-color: #0366d6;
+            --background-color: #f6f8fa;
+            --card-background: #ffffff;
+            --border-color: #e1e4e8;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--primary-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #586069;
+            font-size: 1.1em;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .refresh-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background-color: #005cc5;
+        }
+        
+        .search-box {
+            flex-grow: 1;
+            max-width: 300px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .repo-list {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .repo-card {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            transition: box-shadow 0.2s;
+        }
+        
+        .repo-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .repo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .repo-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+        
+        .repo-name:hover {
+            text-decoration: underline;
+        }
+        
+        .repo-url {
+            color: #586069;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        
+        .release {
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        
+        .release-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .release-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .release-tag {
+            background-color: #f1f8ff;
+            color: var(--secondary-color);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .assets-list {
+            margin-top: 10px;
+        }
+        
+        .asset-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--background-color);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        
+        .asset-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .asset-name {
+            font-weight: 500;
+        }
+        
+        .asset-size {
+            color: #586069;
+            font-size: 12px;
+        }
+        
+        .download-btn {
+            background-color: #2ea44f;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .download-btn:hover {
+            background-color: #2c974b;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #586069;
+        }
+        
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #586069;
+        }
+        
+        .timestamp {
+            text-align: center;
+            color: #586069;
+            font-size: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                max-width: none;
+            }
+            
+            .repo-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GitHub Releases 代理服务</h1>
+            <p class="subtitle">通过代理加速下载 GitHub Releases 文件</p>
+        </header>
+        
+        <div class="controls">
+            <input type="text" 
+                   class="search-box" 
+                   placeholder="搜索仓库或文件..." 
+                   id="searchInput">
+            <button class="refresh-btn" onclick="loadReleases(true)">
+                ↻ 刷新数据
+            </button>
+        </div>
+        
+        <div id="loading" class="loading">
+            <p>正在加载仓库数据...</p>
+        </div>
+        
+        <div id="repoList" class="repo-list" style="display: none;"></div>
+        
+        <div id="timestamp" class="timestamp"></div>
+    </div>
+
+    <script>
+        // 配置
+        const CONFIG = {
+            API_BASE: window.location.origin + '/api',
+            CACHE_KEY: 'github_releases_cache',
+            CACHE_DURATION: 5 * 60 * 1000, // 5分钟缓存
+            AUTO_REFRESH: 10 * 60 * 1000 // 10分钟自动刷新
+        };
+
+        // 加载Releases数据
+        async function loadReleases(forceRefresh = false) {
+            const loadingEl = document.getElementById('loading');
+            const repoListEl = document.getElementById('repoList');
+            const timestampEl = document.getElementById('timestamp');
+            
+            // 检查缓存
+            const cached = localStorage.getItem(CONFIG.CACHE_KEY);
+            const cacheTime = localStorage.getItem(`${CONFIG.CACHE_KEY}_time`);
+            
+            if (!forceRefresh && cached && cacheTime) {
+                const age = Date.now() - parseInt(cacheTime);
+                if (age < CONFIG.CACHE_DURATION) {
+                    displayReleases(JSON.parse(cached));
+                    return;
+                }
+            }
+            
+            loadingEl.style.display = 'block';
+            repoListEl.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${CONFIG.API_BASE}/releases`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 保存到缓存
+                    localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify(data));
+                    localStorage.setItem(`${CONFIG.CACHE_KEY}_time`, Date.now().toString());
+                    
+                    displayReleases(data);
+                    
+                    // 显示时间戳
+                    timestampEl.textContent = `最后更新: ${new Date(data.timestamp).toLocaleString()}`;
+                } else {
+                    showError('加载失败: ' + data.error);
+                }
+            } catch (error) {
+                showError('网络错误: ' + error.message);
+                
+                // 如果网络失败但缓存存在，显示缓存数据
+                if (cached) {
+                    displayReleases(JSON.parse(cached));
+                }
+            } finally {
+                loadingEl.style.display = 'none';
+                repoListEl.style.display = 'grid';
+            }
+        }
+        
+        // 显示Releases数据
+        function displayReleases(data) {
+            const repoListEl = document.getElementById('repoList');
+            const searchInput = document.getElementById('searchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            
+            let html = '';
+            
+            data.data.forEach(repoData => {
+                if (!repoData.releases || repoData.releases.length === 0) {
+                    return;
+                }
+                
+                // 搜索过滤
+                const repoName = `${repoData.repo}`.toLowerCase();
+                const repoUrl = repoData.url.toLowerCase();
+                
+                if (searchTerm && 
+                    !repoName.includes(searchTerm) && 
+                    !repoUrl.includes(searchTerm)) {
+                    
+                    // 检查是否匹配文件名
+                    let hasMatchingFile = false;
+                    repoData.releases.forEach(release => {
+                        if (release && release.assets) {
+                            release.assets.forEach(asset => {
+                                if (asset.name.toLowerCase().includes(searchTerm)) {
+                                    hasMatchingFile = true;
+                                }
+                            });
+                        }
+                    });
+                    
+                    if (!hasMatchingFile) return;
+                }
+                
+                // 仓库卡片
+                html += `<div class="repo-card">`;
+                html += `<div class="repo-header">`;
+                html += `<div>`;
+                html += `<a href="${repoData.url}" target="_blank" class="repo-name">${repoData.repo}</a>`;
+                html += `<div class="repo-url">${repoData.url}</div>`;
+                html += `</div>`;
+                html += `<div class="stats">`;
+                html += `<span>${repoData.releases ? repoData.releases.length : 0} 个发布</span>`;
+                html += `</div>`;
+                html += `</div>`;
+                
+                if (repoData.error) {
+                    html += `<div class="error">错误: ${repoData.error}</div>`;
+                } else if (repoData.releases) {
+                    repoData.releases.forEach(release => {
+                        if (!release || !release.assets || release.assets.length === 0) return;
+                        
+                        html += `<div class="release">`;
+                        html += `<div class="release-header">`;
+                        html += `<div class="release-title">${release.name || release.tag_name}</div>`;
+                        html += `<span class="release-tag">${release.tag_name}</span>`;
+                        html += `</div>`;
+                        html += `<div class="assets-list">`;
+                        
+                        release.assets.forEach(asset => {
+                            const fileSize = formatFileSize(asset.size);
+                            const downloadCount = asset.download_count || 0;
+                            
+                            html += `<div class="asset-item">`;
+                            html += `<div class="asset-info">`;
+                            html += `<span class="asset-name">${asset.name}</span>`;
+                            html += `<span class="asset-size">${fileSize}</span>`;
+                            html += `<span class="asset-size">${downloadCount} 次下载</span>`;
+                            html += `</div>`;
+                            html += `<div>`;
+                            html += `<a href="${asset.proxy_url}" class="download-btn" download>下载</a>`;
+                            html += `<a href="${asset.browser_download_url}" target="_blank" class="download-btn" style="margin-left: 8px; background-color: #6c757d;">直连</a>`;
+                            html += `</div>`;
+                            html += `</div>`;
+                        });
+                        
+                        html += `</div>`;
+                        html += `</div>`;
+                    });
+                }
+                
+                html += `</div>`;
+            });
+            
+            repoListEl.innerHTML = html || '<p>没有找到匹配的仓库</p>';
+        }
+        
+        // 显示错误
+        function showError(message) {
+            const repoListEl = document.getElementById('repoList');
+            repoListEl.innerHTML = `<div class="error">${message}</div>`;
+            repoListEl.style.display = 'block';
+        }
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 搜索功能
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    const cached = localStorage.getItem(CONFIG.CACHE_KEY);
+                    if (cached) {
+                        displayReleases(JSON.parse(cached));
+                    }
+                });
+            }
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadReleases();
+            setupSearch();
+            
+            // 自动刷新
+            setInterval(() => {
+                loadReleases(true);
+            }, CONFIG.AUTO_REFRESH);
+        });
+    </script>
+</body>
+</html>
