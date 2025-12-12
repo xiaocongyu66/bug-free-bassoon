@@ -6,13 +6,15 @@
   "workers_dev": true,
   
   "vars": {
-    "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt"
+    "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt",
+    "GITHUB_TOKENS": "token1,token2,token3"  // 多个Token用逗号分隔
   },
   
   "env": {
     "production": {
       "vars": {
-        "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt"
+        "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt",
+        "GITHUB_TOKENS": "token1,token2,token3"
       }
     }
   }
