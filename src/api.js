@@ -392,62 +392,123 @@ async function getRepoDetails(env, owner, repo) {
   }
 }
 
-// 代理下载
+// 代理下载 - 优化版
 async function proxyDownload(env, owner, repo, assetId, filename) {
   try {
     const tokenManager = new TokenManager(env.GITHUB_TOKENS || '');
-    const url = `https://api.github.com/repos/${owner}/${repo}/releases/assets/${assetId}`;
     
-    const response = await fetchWithTokenRotation(url, {
+    // 首先获取资产的下载URL（这会返回302重定向）
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases/assets/${assetId}`;
+    
+    console.log(`[Download] 请求资产信息: ${apiUrl}`);
+    
+    // 获取资产信息，包含真实的下载URL
+    const assetResponse = await fetchWithTokenRotation(apiUrl, {
       headers: {
-        'Accept': 'application/octet-stream',
+        'Accept': 'application/vnd.github.v3+json',
         'User-Agent': 'GitHub-Releases-Proxy'
       }
     }, tokenManager);
     
-    if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.status}`);
+    if (!assetResponse.ok) {
+      console.error(`[Download] GitHub API 错误: ${assetResponse.status}`);
+      throw new Error(`GitHub API error: ${assetResponse.status}`);
     }
     
-    const { readable, writable } = new TransformStream();
-    response.body.pipeTo(writable);
+    const assetInfo = await assetResponse.json();
+    const downloadUrl = assetInfo.url; // GitHub 提供的下载URL
     
-    return new Response(readable, {
+    console.log(`[Download] 资产信息获取成功, 下载URL: ${downloadUrl}`);
+    
+    // 使用fetch直接获取文件流，不设置Accept头让GitHub返回正确的重定向
+    const fileResponse = await fetch(downloadUrl, {
       headers: {
-        'Content-Type': 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${filename}"`,
-        'Cache-Control': 'public, max-age=86400'
+        'Accept': 'application/octet-stream',
+        'User-Agent': 'GitHub-Releases-Proxy'
+      },
+      // 重要：设置重定向策略为手动处理
+      redirect: 'manual'
+    });
+    
+    // 处理重定向
+    if (fileResponse.status === 302 || fileResponse.status === 301) {
+      const redirectUrl = fileResponse.headers.get('Location');
+      console.log(`[Download] 重定向到: ${redirectUrl}`);
+      
+      if (!redirectUrl) {
+        throw new Error('重定向URL为空');
       }
+      
+      // 跟随重定向，这次自动跟随
+      const finalResponse = await fetch(redirectUrl, {
+        headers: {
+          'User-Agent': 'GitHub-Releases-Proxy'
+        }
+      });
+      
+      if (!finalResponse.ok) {
+        throw new Error(`下载失败: ${finalResponse.status}`);
+      }
+      
+      // 获取响应头
+      const headers = new Headers();
+      headers.set('Content-Type', finalResponse.headers.get('Content-Type') || 'application/octet-stream');
+      headers.set('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+      headers.set('Cache-Control', 'public, max-age=86400');
+      
+      // 传递 Content-Length（如果存在）
+      const contentLength = finalResponse.headers.get('Content-Length');
+      if (contentLength) {
+        headers.set('Content-Length', contentLength);
+      }
+      
+      console.log(`[Download] 开始流式传输, 文件大小: ${contentLength || '未知'} bytes`);
+      
+      // 使用更可靠的流传输方式
+      return new Response(finalResponse.body, {
+        headers: headers,
+        status: finalResponse.status,
+        statusText: finalResponse.statusText
+      });
+    }
+    
+    // 如果没有重定向，直接返回
+    if (!fileResponse.ok) {
+      throw new Error(`下载请求失败: ${fileResponse.status}`);
+    }
+    
+    // 获取响应头
+    const headers = new Headers();
+    headers.set('Content-Type', fileResponse.headers.get('Content-Type') || 'application/octet-stream');
+    headers.set('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+    headers.set('Cache-Control', 'public, max-age=86400');
+    
+    const contentLength = fileResponse.headers.get('Content-Length');
+    if (contentLength) {
+      headers.set('Content-Length', contentLength);
+    }
+    
+    console.log(`[Download] 直接传输, 文件大小: ${contentLength || '未知'} bytes`);
+    
+    return new Response(fileResponse.body, {
+      headers: headers,
+      status: fileResponse.status,
+      statusText: fileResponse.statusText
     });
     
   } catch (error) {
+    console.error('[Download] 下载错误:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
-    }), { status: 500 });
-  }
-}
-
-// 解析仓库列表
-function parseRepoList(text) {
-  return text
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line && !line.startsWith('#'))
-    .map(line => {
-      // 处理各种格式
-      const cleanLine = line.replace(/^https?:\/\//, '').replace('github.com/', '');
-      const parts = cleanLine.split('/').filter(Boolean);
-      if (parts.length >= 2) {
-        return {
-          owner: parts[0],
-          repo: parts[1].replace(/\.git$/, ''),
-          url: `https://github.com/${parts[0]}/${parts[1]}`
-        };
+      error: error.message,
+      details: '下载代理失败，请检查网络连接或重试'
+    }), { 
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json'
       }
-      return null;
-    })
-    .filter(repo => repo !== null);
+    });
+  }
 }
 
 // 获取 GitHub Releases（使用 Token 轮询）
@@ -487,3 +548,5 @@ function processRelease(release, owner, repo, env) {
     }))
   };
 }
+
+
