@@ -1,7 +1,6 @@
 // Cloudflare Worker - ES Module 格式
 import { handleApiRequest } from './api.js';
-import { generateHTML } from './ui.js';
-import { generateAPIDocsHTML } from './ui-fixed.js';
+import { generateHTML, generateAPIDocsHTML } from './ui.js';
 
 export default {
   async fetch(request, env, ctx) {
