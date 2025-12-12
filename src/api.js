@@ -56,226 +56,7 @@ export async function handleApiRequest(request, env, url) {
     }));
   }
   
-  // Token 状态检查
-  if (path === '/api/tokens/status') {
-    return await getTokenStatus(env);
-  }
-  
   return new Response(JSON.stringify({ error: 'API endpoint not found' }), { status: 404 });
-}
-
-// Token 管理器类
-class TokenManager {
-  constructor(tokensString = '') {
-    this.tokens = tokensString.split(',').map(t => t.trim()).filter(t => t);
-    this.currentIndex = 0;
-    this.tokenStats = {};
-    this.tokens.forEach(token => {
-      this.tokenStats[token.substring(0, 8) + '...'] = {
-        totalRequests: 0,
-        successfulRequests: 0,
-        failedRequests: 0,
-        lastUsed: null,
-        lastError: null
-      };
-    });
-  }
-  
-  // 获取下一个可用的 Token
-  getNextToken() {
-    if (this.tokens.length === 0) {
-      return null;
-    }
-    
-    // 尝试找到可用的 Token
-    const startIndex = this.currentIndex;
-    let attempts = 0;
-    
-    while (attempts < this.tokens.length) {
-      const token = this.tokens[this.currentIndex];
-      const tokenKey = token.substring(0, 8) + '...';
-      
-      this.currentIndex = (this.currentIndex + 1) % this.tokens.length;
-      attempts++;
-      
-      // 检查 Token 是否可用（这里可以根据需要添加更复杂的检查逻辑）
-      if (this.tokenStats[tokenKey].failedRequests < 5) { // 连续失败5次则跳过
-        this.tokenStats[tokenKey].totalRequests++;
-        this.tokenStats[tokenKey].lastUsed = new Date().toISOString();
-        return token;
-      }
-    }
-    
-    return this.tokens[0] || null; // 如果所有Token都失败过，返回第一个
-  }
-  
-  // 记录请求结果
-  recordResult(token, success, error = null) {
-    const tokenKey = token.substring(0, 8) + '...';
-    if (success) {
-      this.tokenStats[tokenKey].successfulRequests++;
-      this.tokenStats[tokenKey].failedRequests = 0; // 重置失败计数
-    } else {
-      this.tokenStats[tokenKey].failedRequests++;
-      this.tokenStats[tokenKey].lastError = error;
-    }
-  }
-  
-  // 获取 Token 状态
-  getStats() {
-    return {
-      totalTokens: this.tokens.length,
-      tokens: this.tokens.map(t => t.substring(0, 8) + '...'),
-      stats: this.tokenStats,
-      currentIndex: this.currentIndex
-    };
-  }
-  
-  // 重置 Token 状态
-  resetToken(token) {
-    const tokenKey = token.substring(0, 8) + '...';
-    if (this.tokenStats[tokenKey]) {
-      this.tokenStats[tokenKey].failedRequests = 0;
-      this.tokenStats[tokenKey].lastError = null;
-    }
-  }
-}
-
-// 获取 Token 状态
-async function getTokenStatus(env) {
-  const tokenManager = new TokenManager(env.GITHUB_TOKENS || '');
-  return new Response(JSON.stringify({
-    success: true,
-    data: tokenManager.getStats(),
-    timestamp: new Date().toISOString()
-  }), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache'
-    }
-  });
-}
-
-// 改进的 fetchWithTokenRotation 函数
-async function fetchWithTokenRotation(url, options, tokenManager) {
-  let lastError = null;
-  let lastResponse = null;
-  
-  // 如果没有 Token，直接请求
-  if (!tokenManager || tokenManager.tokens.length === 0) {
-    console.log(`[Fetch] 无Token, 直接请求: ${url}`);
-    const response = await fetch(url, options);
-    return response;
-  }
-  
-  // 尝试所有可用的 Token
-  const maxAttempts = Math.min(tokenManager.tokens.length * 2, 10);
-  
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const token = tokenManager.getNextToken();
-    if (!token) {
-      console.error('[Fetch] 无可用Token');
-      break;
-    }
-    
-    const tokenKey = token.substring(0, 8) + '...';
-    console.log(`[Fetch] 尝试第${attempt + 1}次, Token: ${tokenKey}, URL: ${url}`);
-    
-    try {
-      const headers = new Headers(options?.headers || {});
-      headers.set('Authorization', `token ${token}`);
-      headers.set('User-Agent', 'GitHub-Releases-Proxy');
-      headers.set('Accept', 'application/vnd.github.v3+json');
-      
-      const fetchOptions = {
-        ...options,
-        headers: headers,
-        // 设置更长的超时时间
-        cf: {
-          // Cloudflare Workers 特定配置
-          cacheEverything: false,
-          cacheTtl: 0,
-          // 增加超时时间
-          fetchOptions: {
-            timeout: 30000 // 30秒超时
-          }
-        }
-      };
-      
-      const response = await fetch(url, fetchOptions);
-      lastResponse = response;
-      
-      // 检查速率限制
-      const remaining = response.headers.get('X-RateLimit-Remaining');
-      const limit = response.headers.get('X-RateLimit-Limit');
-      const resetTime = response.headers.get('X-RateLimit-Reset');
-      
-      console.log(`[Fetch] 响应状态: ${response.status}, 剩余次数: ${remaining}/${limit}`);
-      
-      if (response.status === 401 || response.status === 403) {
-        // Token 无效或被限制
-        const errorMsg = `Token ${tokenKey} 失败: ${response.status}`;
-        console.warn(`[Fetch] ${errorMsg}`);
-        tokenManager.recordResult(token, false, errorMsg);
-        lastError = new Error(errorMsg);
-        
-        // 如果是速率限制，等待一段时间
-        if (response.status === 403 && remaining === '0') {
-          const resetDate = new Date(resetTime * 1000);
-          const waitTime = resetDate - new Date();
-          console.log(`[Fetch] Token ${tokenKey} 达到限制, 重置时间: ${resetDate}, 等待: ${waitTime}ms`);
-          
-          if (waitTime > 0 && waitTime < 120000) { // 等待最多120秒
-            await new Promise(resolve => setTimeout(resolve, Math.min(waitTime + 1000, 120000)));
-          }
-        }
-        continue;
-      }
-      
-      if (response.ok) {
-        tokenManager.recordResult(token, true);
-        console.log(`[Fetch] 请求成功, Token: ${tokenKey}`);
-        return response;
-      }
-      
-      // 其他错误
-      console.warn(`[Fetch] 请求失败但Token可能有效, 状态: ${response.status}`);
-      tokenManager.recordResult(token, true);
-      return response;
-      
-    } catch (error) {
-      console.error(`[Fetch] 请求异常, Token: ${tokenKey}, 错误:`, error.message);
-      tokenManager.recordResult(token, false, error.message);
-      lastError = error;
-      
-      // 网络错误时稍作延迟再重试
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
-      }
-    }
-  }
-  
-  // 如果所有尝试都失败，尝试不使用Token
-  if (lastError) {
-    console.log('[Fetch] 所有Token失败, 尝试无Token请求');
-    try {
-      const fallbackOptions = { ...options };
-      const fallbackHeaders = new Headers(fallbackOptions.headers || {});
-      fallbackHeaders.delete('Authorization');
-      fallbackHeaders.set('User-Agent', 'GitHub-Releases-Proxy');
-      fallbackOptions.headers = fallbackHeaders;
-      
-      const response = await fetch(url, fallbackOptions);
-      if (response.ok) {
-        console.log('[Fetch] 无Token请求成功');
-        return response;
-      }
-    } catch (fallbackError) {
-      console.error('[Fetch] 无Token请求也失败:', fallbackError.message);
-    }
-  }
-  
-  throw lastError || new Error('所有请求尝试都失败');
 }
 
 // 获取仓库列表
@@ -319,11 +100,11 @@ async function getLatestReleases(env) {
     const repos = parseRepoList(repoText);
     
     const results = [];
-    const tokenManager = new TokenManager(env.GITHUB_TOKENS || '');
+    const githubToken = env.GITHUB_TOKEN;
     
     for (const repo of repos.slice(0, 20)) { // 限制最多20个仓库
       try {
-        const releases = await fetchGitHubReleases(repo.owner, repo.repo, tokenManager);
+        const releases = await fetchGitHubReleases(repo.owner, repo.repo, githubToken);
         if (releases && releases.length > 0) {
           const latestRelease = releases[0];
           const historyReleases = releases.slice(1, 6); // 最近5个历史版本
@@ -349,7 +130,6 @@ async function getLatestReleases(env) {
     return new Response(JSON.stringify({
       success: true,
       data: results,
-      tokenStats: tokenManager.getStats(),
       timestamp: new Date().toISOString()
     }), {
       headers: {
@@ -369,8 +149,8 @@ async function getLatestReleases(env) {
 // 获取仓库所有版本
 async function getAllReleases(env, owner, repo) {
   try {
-    const tokenManager = new TokenManager(env.GITHUB_TOKENS || '');
-    const releases = await fetchGitHubReleases(owner, repo, tokenManager);
+    const githubToken = env.GITHUB_TOKEN;
+    const releases = await fetchGitHubReleases(owner, repo, githubToken);
     
     const processedReleases = releases.map(r => 
       processRelease(r, owner, repo, env)
@@ -383,7 +163,6 @@ async function getAllReleases(env, owner, repo) {
         releases: processedReleases,
         count: releases.length
       },
-      tokenStats: tokenManager.getStats(),
       timestamp: new Date().toISOString()
     }), {
       headers: {
@@ -403,8 +182,8 @@ async function getAllReleases(env, owner, repo) {
 // 获取仓库详情
 async function getRepoDetails(env, owner, repo) {
   try {
-    const tokenManager = new TokenManager(env.GITHUB_TOKENS || '');
-    const releases = await fetchGitHubReleases(owner, repo, tokenManager);
+    const githubToken = env.GITHUB_TOKEN;
+    const releases = await fetchGitHubReleases(owner, repo, githubToken);
     
     if (!releases || releases.length === 0) {
       return new Response(JSON.stringify({
@@ -429,7 +208,6 @@ async function getRepoDetails(env, owner, repo) {
         history: historyReleases.map(r => processRelease(r, owner, repo, env)),
         total: releases.length
       },
-      tokenStats: tokenManager.getStats(),
       timestamp: new Date().toISOString()
     }), {
       headers: {
@@ -446,130 +224,83 @@ async function getRepoDetails(env, owner, repo) {
   }
 }
 
-// 代理下载 - 优化版
+// 代理下载
 async function proxyDownload(env, owner, repo, assetId, filename) {
   try {
-    const tokenManager = new TokenManager(env.GITHUB_TOKENS || '');
+    const headers = {
+      'Accept': 'application/octet-stream',
+      'User-Agent': 'GitHub-Releases-Proxy'
+    };
     
-    // 首先获取资产的下载URL（这会返回302重定向）
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases/assets/${assetId}`;
+    if (env.GITHUB_TOKEN) {
+      headers['Authorization'] = `token ${env.GITHUB_TOKEN}`;
+    }
     
-    console.log(`[Download] 请求资产信息: ${apiUrl}`);
+    const response = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/releases/assets/${assetId}`,
+      { headers }
+    );
     
-    // 获取资产信息，包含真实的下载URL
-    const assetResponse = await fetchWithTokenRotation(apiUrl, {
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.status}`);
+    }
+    
+    const { readable, writable } = new TransformStream();
+    response.body.pipeTo(writable);
+    
+    return new Response(readable, {
       headers: {
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'GitHub-Releases-Proxy'
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Cache-Control': 'public, max-age=86400'
       }
-    }, tokenManager);
-    
-    if (!assetResponse.ok) {
-      console.error(`[Download] GitHub API 错误: ${assetResponse.status}`);
-      throw new Error(`GitHub API error: ${assetResponse.status}`);
-    }
-    
-    const assetInfo = await assetResponse.json();
-    const downloadUrl = assetInfo.url; // GitHub 提供的下载URL
-    
-    console.log(`[Download] 资产信息获取成功, 下载URL: ${downloadUrl}`);
-    
-    // 使用fetch直接获取文件流，不设置Accept头让GitHub返回正确的重定向
-    const fileResponse = await fetch(downloadUrl, {
-      headers: {
-        'Accept': 'application/octet-stream',
-        'User-Agent': 'GitHub-Releases-Proxy'
-      },
-      // 重要：设置重定向策略为手动处理
-      redirect: 'manual'
-    });
-    
-    // 处理重定向
-    if (fileResponse.status === 302 || fileResponse.status === 301) {
-      const redirectUrl = fileResponse.headers.get('Location');
-      console.log(`[Download] 重定向到: ${redirectUrl}`);
-      
-      if (!redirectUrl) {
-        throw new Error('重定向URL为空');
-      }
-      
-      // 跟随重定向，这次自动跟随
-      const finalResponse = await fetch(redirectUrl, {
-        headers: {
-          'User-Agent': 'GitHub-Releases-Proxy'
-        }
-      });
-      
-      if (!finalResponse.ok) {
-        throw new Error(`下载失败: ${finalResponse.status}`);
-      }
-      
-      // 获取响应头
-      const headers = new Headers();
-      headers.set('Content-Type', finalResponse.headers.get('Content-Type') || 'application/octet-stream');
-      headers.set('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
-      headers.set('Cache-Control', 'public, max-age=86400');
-      
-      // 传递 Content-Length（如果存在）
-      const contentLength = finalResponse.headers.get('Content-Length');
-      if (contentLength) {
-        headers.set('Content-Length', contentLength);
-      }
-      
-      console.log(`[Download] 开始流式传输, 文件大小: ${contentLength || '未知'} bytes`);
-      
-      // 使用更可靠的流传输方式
-      return new Response(finalResponse.body, {
-        headers: headers,
-        status: finalResponse.status,
-        statusText: finalResponse.statusText
-      });
-    }
-    
-    // 如果没有重定向，直接返回
-    if (!fileResponse.ok) {
-      throw new Error(`下载请求失败: ${fileResponse.status}`);
-    }
-    
-    // 获取响应头
-    const headers = new Headers();
-    headers.set('Content-Type', fileResponse.headers.get('Content-Type') || 'application/octet-stream');
-    headers.set('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
-    headers.set('Cache-Control', 'public, max-age=86400');
-    
-    const contentLength = fileResponse.headers.get('Content-Length');
-    if (contentLength) {
-      headers.set('Content-Length', contentLength);
-    }
-    
-    console.log(`[Download] 直接传输, 文件大小: ${contentLength || '未知'} bytes`);
-    
-    return new Response(fileResponse.body, {
-      headers: headers,
-      status: fileResponse.status,
-      statusText: fileResponse.statusText
     });
     
   } catch (error) {
-    console.error('[Download] 下载错误:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
-      details: '下载代理失败，请检查网络连接或重试'
-    }), { 
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+      error: error.message
+    }), { status: 500 });
   }
 }
 
-// 获取 GitHub Releases（使用 Token 轮询）
-async function fetchGitHubReleases(owner, repo, tokenManager) {
-  const url = `https://api.github.com/repos/${owner}/${repo}/releases`;
+// 解析仓库列表
+function parseRepoList(text) {
+  return text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line && !line.startsWith('#'))
+    .map(line => {
+      // 处理各种格式
+      const cleanLine = line.replace(/^https?:\/\//, '').replace('github.com/', '');
+      const parts = cleanLine.split('/').filter(Boolean);
+      if (parts.length >= 2) {
+        return {
+          owner: parts[0],
+          repo: parts[1].replace(/\.git$/, ''),
+          url: `https://github.com/${parts[0]}/${parts[1]}`
+        };
+      }
+      return null;
+    })
+    .filter(repo => repo !== null);
+}
+
+// 获取 GitHub Releases
+async function fetchGitHubReleases(owner, repo, token) {
+  const headers = {
+    'User-Agent': 'GitHub-Releases-Proxy',
+    'Accept': 'application/vnd.github.v3+json'
+  };
   
-  const response = await fetchWithTokenRotation(url, {}, tokenManager);
+  if (token) {
+    headers['Authorization'] = `token ${token}`;
+  }
+  
+  const response = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/releases`,
+    { headers }
+  );
   
   if (!response.ok) {
     if (response.status === 404) {
@@ -579,41 +310,6 @@ async function fetchGitHubReleases(owner, repo, tokenManager) {
   }
   
   return await response.json();
-}
-
-// 在 api.js 中添加下载监控
-async function monitorDownload(response, owner, repo, assetId) {
-  const startTime = Date.now();
-  let bytesDownloaded = 0;
-  
-  // 创建 TransformStream 来监控下载进度
-  const { readable, writable } = new TransformStream({
-    transform(chunk, controller) {
-      bytesDownloaded += chunk.length;
-      controller.enqueue(chunk);
-    },
-    flush(controller) {
-      const endTime = Date.now();
-      const duration = endTime - startTime;
-      const speed = bytesDownloaded / (duration / 1000); // bytes per second
-      
-      console.log(`[Monitor] 下载完成: ${owner}/${repo}, 资源ID: ${assetId}`);
-      console.log(`[Monitor] 大小: ${formatFileSize(bytesDownloaded)}`);
-      console.log(`[Monitor] 耗时: ${duration}ms, 速度: ${formatFileSize(speed)}/s`);
-      
-      controller.terminate();
-    }
-  });
-  
-  // 将原始响应流通过监控流
-  response.body.pipeTo(writable);
-  
-  // 返回新的响应
-  return new Response(readable, {
-    headers: response.headers,
-    status: response.status,
-    statusText: response.statusText
-  });
 }
 
 // 处理单个 Release
@@ -636,10 +332,4 @@ function processRelease(release, owner, repo, env) {
       proxy_url: `${baseUrl}/api/download?owner=${owner}&repo=${repo}&assetId=${asset.id}&filename=${encodeURIComponent(asset.name)}`
     }))
   };
-  
 }
-
-
-
-
-
