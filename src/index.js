@@ -2,6 +2,7 @@
 import { handleApiRequest } from './api.js';
 import { generateHTML, generateApiDocsHTML } from './ui.js';
 
+// 在 index.js 的 fetch 函数中添加
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -10,13 +11,47 @@ export default {
     // 设置 CORS 头
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, HEAD',
+      'Access-Control-Allow-Headers': 'Content-Type, Range',
+      'Access-Control-Expose-Headers': 'Content-Length, Content-Range',
+      'Access-Control-Max-Age': '86400'
     };
 
     // 处理预检请求
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
+      return new Response(null, { 
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/plain; charset=utf-8'
+        } 
+      });
+    }
+    
+    // 处理 HEAD 请求（用于检查文件大小）
+    if (request.method === 'HEAD') {
+      if (path.startsWith('/api/download')) {
+        const owner = url.searchParams.get('owner');
+        const repo = url.searchParams.get('repo');
+        const assetId = url.searchParams.get('assetId');
+        
+        if (owner && repo && assetId) {
+          try {
+            // 返回一个包含基本信息的响应
+            return new Response(null, {
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'application/octet-stream',
+                'Accept-Ranges': 'bytes',
+                'Access-Control-Allow-Origin': '*'
+              },
+              status: 200
+            });
+          } catch (error) {
+            console.error('HEAD请求错误:', error);
+          }
+        }
+      }
+      return new Response(null, { status: 405 });
     }
 
     try {
@@ -56,10 +91,11 @@ export default {
       });
       
     } catch (error) {
-      console.error('Error:', error);
+      console.error('全局错误:', error);
       return new Response(JSON.stringify({
         success: false,
-        error: error.message
+        error: error.message,
+        timestamp: new Date().toISOString()
       }), {
         status: 500,
         headers: {
