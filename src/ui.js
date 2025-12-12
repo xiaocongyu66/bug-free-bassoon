@@ -200,13 +200,15 @@ export function generateHTML(env) {
             word-break: break-all;
         }
         
-        .repo-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            padding: 20px;
-            align-items: stretch; /* 确保两个列等高 */
-        }
+        
+          .repo-content {
+              display: grid;
+              grid-template-columns: 2fr 1fr;
+              grid-template-rows: auto; /* 行高由内容决定 */
+              gap: 20px;
+              padding: 20px;
+              align-items: start; /* 顶部对齐 */
+          }
         
         @media (max-width: 768px) {
             .repo-content {
@@ -215,11 +217,9 @@ export function generateHTML(env) {
         }
         
         .latest-release {
-             border-right: 1px solid var(--border-color);
-             padding-right: 20px;
-             display: flex;
-             flex-direction: column;
-             height: 100%;
+           grid-column: 1;
+           border-right: 1px solid var(--border-color);
+           padding-right: 20px;
         }
         
         .release-title {
@@ -309,12 +309,15 @@ export function generateHTML(env) {
         }
         
         .history-section {
+            grid-column: 2;
             padding: 15px;
             background-color: #fafbfc;
             border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
+           /* 高度由左边内容决定，但不超过视口 */
+            max-height: min(calc(100vh - 200px), auto);
+            position: sticky;
+            top: 20px;
+            align-self: start; /* 与左边顶部对齐 */
         }
 
         .history-title {
