@@ -1181,7 +1181,7 @@ export function generateHTML(env) {
 
 // 生成 API 文档页面
 export function generateApiDocsHTML(env) {
-  const workerUrl = env.WORKER_URL || window.location.origin;
+  const workerUrl = env.WORKER_URL || '';
   
   return `<!DOCTYPE html>
 <html lang="zh-CN">
