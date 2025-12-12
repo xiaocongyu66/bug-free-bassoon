@@ -156,51 +156,77 @@ async function getTokenStatus(env) {
   });
 }
 
-// 使用 Token 轮询获取数据
+// 改进的 fetchWithTokenRotation 函数
 async function fetchWithTokenRotation(url, options, tokenManager) {
   let lastError = null;
+  let lastResponse = null;
   
   // 如果没有 Token，直接请求
   if (!tokenManager || tokenManager.tokens.length === 0) {
+    console.log(`[Fetch] 无Token, 直接请求: ${url}`);
     const response = await fetch(url, options);
-    if (response.ok) {
-      return response;
-    }
-    throw new Error(`Request failed: ${response.status}`);
+    return response;
   }
   
   // 尝试所有可用的 Token
-  const maxAttempts = Math.min(tokenManager.tokens.length * 2, 10); // 最多尝试10次
+  const maxAttempts = Math.min(tokenManager.tokens.length * 2, 10);
+  
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const token = tokenManager.getNextToken();
-    if (!token) break;
+    if (!token) {
+      console.error('[Fetch] 无可用Token');
+      break;
+    }
     
     const tokenKey = token.substring(0, 8) + '...';
+    console.log(`[Fetch] 尝试第${attempt + 1}次, Token: ${tokenKey}, URL: ${url}`);
     
     try {
-      const headers = {
-        ...options.headers,
-        'Authorization': `token ${token}`,
-        'User-Agent': 'GitHub-Releases-Proxy',
-        'Accept': 'application/vnd.github.v3+json'
+      const headers = new Headers(options?.headers || {});
+      headers.set('Authorization', `token ${token}`);
+      headers.set('User-Agent', 'GitHub-Releases-Proxy');
+      headers.set('Accept', 'application/vnd.github.v3+json');
+      
+      const fetchOptions = {
+        ...options,
+        headers: headers,
+        // 设置更长的超时时间
+        cf: {
+          // Cloudflare Workers 特定配置
+          cacheEverything: false,
+          cacheTtl: 0,
+          // 增加超时时间
+          fetchOptions: {
+            timeout: 30000 // 30秒超时
+          }
+        }
       };
       
-      const response = await fetch(url, { ...options, headers });
+      const response = await fetch(url, fetchOptions);
+      lastResponse = response;
+      
+      // 检查速率限制
+      const remaining = response.headers.get('X-RateLimit-Remaining');
+      const limit = response.headers.get('X-RateLimit-Limit');
+      const resetTime = response.headers.get('X-RateLimit-Reset');
+      
+      console.log(`[Fetch] 响应状态: ${response.status}, 剩余次数: ${remaining}/${limit}`);
       
       if (response.status === 401 || response.status === 403) {
         // Token 无效或被限制
-        tokenManager.recordResult(token, false, `Token ${tokenKey} failed with status ${response.status}`);
-        lastError = new Error(`Token ${tokenKey} failed: ${response.status}`);
+        const errorMsg = `Token ${tokenKey} 失败: ${response.status}`;
+        console.warn(`[Fetch] ${errorMsg}`);
+        tokenManager.recordResult(token, false, errorMsg);
+        lastError = new Error(errorMsg);
         
         // 如果是速率限制，等待一段时间
-        const remaining = response.headers.get('X-RateLimit-Remaining');
-        const resetTime = response.headers.get('X-RateLimit-Reset');
-        
         if (response.status === 403 && remaining === '0') {
           const resetDate = new Date(resetTime * 1000);
           const waitTime = resetDate - new Date();
-          if (waitTime > 0 && waitTime < 60000) { // 等待最多60秒
-            await new Promise(resolve => setTimeout(resolve, waitTime + 1000));
+          console.log(`[Fetch] Token ${tokenKey} 达到限制, 重置时间: ${resetDate}, 等待: ${waitTime}ms`);
+          
+          if (waitTime > 0 && waitTime < 120000) { // 等待最多120秒
+            await new Promise(resolve => setTimeout(resolve, Math.min(waitTime + 1000, 120000)));
           }
         }
         continue;
@@ -208,20 +234,48 @@ async function fetchWithTokenRotation(url, options, tokenManager) {
       
       if (response.ok) {
         tokenManager.recordResult(token, true);
+        console.log(`[Fetch] 请求成功, Token: ${tokenKey}`);
         return response;
       }
       
-      // 其他错误，不换 Token 直接返回
-      tokenManager.recordResult(token, true); // 认为 Token 是有效的，但请求有误
+      // 其他错误
+      console.warn(`[Fetch] 请求失败但Token可能有效, 状态: ${response.status}`);
+      tokenManager.recordResult(token, true);
       return response;
       
     } catch (error) {
+      console.error(`[Fetch] 请求异常, Token: ${tokenKey}, 错误:`, error.message);
       tokenManager.recordResult(token, false, error.message);
       lastError = error;
+      
+      // 网络错误时稍作延迟再重试
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+      }
     }
   }
   
-  throw lastError || new Error('All tokens failed');
+  // 如果所有尝试都失败，尝试不使用Token
+  if (lastError) {
+    console.log('[Fetch] 所有Token失败, 尝试无Token请求');
+    try {
+      const fallbackOptions = { ...options };
+      const fallbackHeaders = new Headers(fallbackOptions.headers || {});
+      fallbackHeaders.delete('Authorization');
+      fallbackHeaders.set('User-Agent', 'GitHub-Releases-Proxy');
+      fallbackOptions.headers = fallbackHeaders;
+      
+      const response = await fetch(url, fallbackOptions);
+      if (response.ok) {
+        console.log('[Fetch] 无Token请求成功');
+        return response;
+      }
+    } catch (fallbackError) {
+      console.error('[Fetch] 无Token请求也失败:', fallbackError.message);
+    }
+  }
+  
+  throw lastError || new Error('所有请求尝试都失败');
 }
 
 // 获取仓库列表
@@ -527,6 +581,41 @@ async function fetchGitHubReleases(owner, repo, tokenManager) {
   return await response.json();
 }
 
+// 在 api.js 中添加下载监控
+async function monitorDownload(response, owner, repo, assetId) {
+  const startTime = Date.now();
+  let bytesDownloaded = 0;
+  
+  // 创建 TransformStream 来监控下载进度
+  const { readable, writable } = new TransformStream({
+    transform(chunk, controller) {
+      bytesDownloaded += chunk.length;
+      controller.enqueue(chunk);
+    },
+    flush(controller) {
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      const speed = bytesDownloaded / (duration / 1000); // bytes per second
+      
+      console.log(`[Monitor] 下载完成: ${owner}/${repo}, 资源ID: ${assetId}`);
+      console.log(`[Monitor] 大小: ${formatFileSize(bytesDownloaded)}`);
+      console.log(`[Monitor] 耗时: ${duration}ms, 速度: ${formatFileSize(speed)}/s`);
+      
+      controller.terminate();
+    }
+  });
+  
+  // 将原始响应流通过监控流
+  response.body.pipeTo(writable);
+  
+  // 返回新的响应
+  return new Response(readable, {
+    headers: response.headers,
+    status: response.status,
+    statusText: response.statusText
+  });
+}
+
 // 处理单个 Release
 function processRelease(release, owner, repo, env) {
   const baseUrl = env.WORKER_URL || '';
@@ -547,6 +636,10 @@ function processRelease(release, owner, repo, env) {
       proxy_url: `${baseUrl}/api/download?owner=${owner}&repo=${repo}&assetId=${asset.id}&filename=${encodeURIComponent(asset.name)}`
     }))
   };
+  
 }
+
+
+
 
 
