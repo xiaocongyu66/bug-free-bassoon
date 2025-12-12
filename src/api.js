@@ -198,7 +198,7 @@ async function getRepoDetails(env, owner, repo) {
     }
     
     const latestRelease = releases[0];
-    const historyReleases = releases.slice(1, 11); // 最近10个历史版本
+    const historyReleases = releases.slice(1, 30); // 最近10个历史版本
     
     return new Response(JSON.stringify({
       success: true,
