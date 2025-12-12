@@ -102,12 +102,12 @@ async function getLatestReleases(env) {
     const results = [];
     const githubToken = env.GITHUB_TOKEN;
     
-    for (const repo of repos.slice(0, 20)) { // 限制最多20个仓库
+    for (const repo of repos.slice(0, 50)) { // 限制最多20个仓库
       try {
         const releases = await fetchGitHubReleases(repo.owner, repo.repo, githubToken);
         if (releases && releases.length > 0) {
           const latestRelease = releases[0];
-          const historyReleases = releases.slice(1, 6); // 最近5个历史版本
+          const historyReleases = releases.slice(1, 50); // 最近5个历史版本
           
           results.push({
             repo: `${repo.owner}/${repo.repo}`,
@@ -198,7 +198,7 @@ async function getRepoDetails(env, owner, repo) {
     }
     
     const latestRelease = releases[0];
-    const historyReleases = releases.slice(1, 30); // 最近10个历史版本
+    const historyReleases = releases.slice(1, 50); // 最近10个历史版本
     
     return new Response(JSON.stringify({
       success: true,
