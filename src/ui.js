@@ -198,17 +198,15 @@ export function generateHTML(env) {
             color: var(--text-secondary);
             font-size: 14px;
             word-break: break-all;
+        }     
+                
+         /* 改为flex布局，并让右边自适应左边 */
+        .repo-content {
+             display: flex;
+             gap: 20px;
+             padding: 20px;
+             align-items: flex-start; /* 顶端对齐 */
         }
-        
-        
-          .repo-content {
-              display: grid;
-              grid-template-columns: 2fr 1fr;
-              grid-template-rows: auto; /* 行高由内容决定 */
-              gap: 20px;
-              padding: 20px;
-              align-items: start; /* 顶部对齐 */
-          }
         
         @media (max-width: 768px) {
             .repo-content {
@@ -217,9 +215,10 @@ export function generateHTML(env) {
         }
         
         .latest-release {
-           grid-column: 1;
-           border-right: 1px solid var(--border-color);
-           padding-right: 20px;
+            flex: 2; /* 占据2份宽度 */
+            border-right: 1px solid var(--border-color);
+            padding-right: 20px;
+            min-height: 300px; /* 设置最小高度 */
         }
         
         .release-title {
@@ -309,15 +308,11 @@ export function generateHTML(env) {
         }
         
         .history-section {
-            grid-column: 2;
+            flex: 1; /* 占据1份宽度 */
             padding: 15px;
             background-color: #fafbfc;
             border-radius: 6px;
-           /* 高度由左边内容决定，但不超过视口 */
-            max-height: min(calc(100vh - 200px), auto);
-            position: sticky;
-            top: 20px;
-            align-self: start; /* 与左边顶部对齐 */
+            height: auto; /* 自动高度 */
         }
 
         .history-title {
