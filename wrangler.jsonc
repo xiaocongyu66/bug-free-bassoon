@@ -6,14 +6,14 @@
   "workers_dev": true,
   
   "vars": {
-    "REPO_LIST_URL": "https://raw.githubusercontent.com/xiaocongyu66/bug-free-bassoon/refs/heads/main/src/url.txt"
+    "REPO_LIST_URL": "https://raw.githubusercontent.com/xiaocongyu66/bug-free-bassoon/refs/heads/main/src/url.txt",
     "GITHUB_TOKENS": "token1"
   },
   
   "env": {
     "production": {
       "vars": {
-        "REPO_LIST_URL": "https://raw.githubusercontent.com/xiaocongyu66/bug-free-bassoon/refs/heads/main/src/url.txt"
+        "REPO_LIST_URL": "https://raw.githubusercontent.com/xiaocongyu66/bug-free-bassoon/refs/heads/main/src/url.txt",
         "GITHUB_TOKENS": "token1"
       }
     }
