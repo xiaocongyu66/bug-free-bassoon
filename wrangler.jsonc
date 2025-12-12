@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
+  "name": "github-releases-proxy",
+  "compatibility_date": "2025-12-12",
+  "main": "src/index.js",
+  "workers_dev": true,
+  
+  "vars": {
+    "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt"
+  },
+  
+  "env": {
+    "production": {
+      "vars": {
+        "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt"
+      }
+    }
+  }
+}
