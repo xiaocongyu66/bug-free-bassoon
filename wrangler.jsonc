@@ -1,3 +1,4 @@
+
 {
   "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
   "name": "github-releases-proxy",
@@ -6,15 +7,15 @@
   "workers_dev": true,
   
   "vars": {
-    "REPO_LIST_URL": "https://raw.githubusercontent.com/xiaocongyu66/bug-free-bassoon/refs/heads/main/src/url.txt",
-    "GITHUB_TOKENS": "token1"
+    "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt"
+    "WORKER_URL": "you_url"
   },
   
   "env": {
     "production": {
       "vars": {
-        "REPO_LIST_URL": "https://raw.githubusercontent.com/xiaocongyu66/bug-free-bassoon/refs/heads/main/src/url.txt",
-        "GITHUB_TOKENS": "token1"
+        "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt"
+        "WORKER_URL": "you_url"
       }
     }
   }
