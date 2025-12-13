@@ -8,7 +8,7 @@
   
   "vars": {
     "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt",
-    "WORKER_URL": "you_url"
+    "WORKER_URL": "you_url",
     "GITHUB_TOKEN": ""
   },
   
