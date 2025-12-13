@@ -9,13 +9,15 @@
   "vars": {
     "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt",
     "WORKER_URL": "you_url"
+    "GITHUB_TOKEN": ""
   },
   
   "env": {
     "production": {
       "vars": {
-        "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt",
-        "WORKER_URL": "you_url"
+        "REPO_LIST_URL": "https://raw.githubusercontent.com/xiaocongyu66/bug-free-bassoon/refs/heads/main/src/url.txt",
+        "WORKER_URL": "you_url",
+        "GITHUB_TOKEN": ""
       }
     }
   }
