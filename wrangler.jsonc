@@ -7,14 +7,14 @@
   "workers_dev": true,
   
   "vars": {
-    "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt"
+    "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt",
     "WORKER_URL": "you_url"
   },
   
   "env": {
     "production": {
       "vars": {
-        "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt"
+        "REPO_LIST_URL": "https://raw.githubusercontent.com/YOUR_USERNAME/repo-list/main/url.txt",
         "WORKER_URL": "you_url"
       }
     }
