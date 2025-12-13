@@ -19,8 +19,6 @@ export function generateHTML(env) {
             --border-color: #e1e4e8;
             --text-secondary: #586069;
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --sidebar-width: 280px;
-            --header-height: 70px;
         }
         
         * {
@@ -125,32 +123,12 @@ export function generateHTML(env) {
             }
         }
         
-        /* Left Column */
-        .left-column {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-        
-        /* Right Column */
-        .right-column {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-        
         /* Section Styles */
         section {
             background: var(--card-bg);
             border-radius: 10px;
             box-shadow: var(--shadow);
             overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        
-        section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
         
         section > h2 {
@@ -170,53 +148,6 @@ export function generateHTML(env) {
         
         .section-content {
             padding: 25px;
-        }
-        
-        /* API Docs Section */
-        #api-docs {
-            background: var(--card-bg);
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            overflow: hidden;
-        }
-        
-        #api-docs.hidden {
-            display: none;
-        }
-        
-        .docs-content {
-            padding: 25px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        
-        .api-endpoint {
-            margin-bottom: 25px;
-            padding-bottom: 25px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .api-endpoint:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        
-        .api-endpoint h3 {
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            color: var(--primary-color);
-        }
-        
-        .method {
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            padding: 8px 15px;
-            border-radius: 6px;
-            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-            font-size: 14px;
-            margin-bottom: 15px;
-            color: var(--accent-color);
         }
         
         /* Announcement Section */
@@ -241,16 +172,12 @@ export function generateHTML(env) {
         
         /* Controls Section */
         .controls {
-            background: var(--card-bg);
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            padding: 20px;
-            margin-bottom: 25px;
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 25px;
         }
         
         .search-container {
@@ -358,12 +285,13 @@ export function generateHTML(env) {
             word-break: break-all;
         }
         
-        /* Repo Content - 保持原来的布局但适应新设计 */
+        /* 修复的 Repo Content 布局 - 右边高度完全跟随左边 */
         .repo-content {
             display: flex;
             gap: 20px;
             padding: 20px;
             align-items: stretch;
+            position: relative;
         }
         
         @media (max-width: 768px) {
@@ -420,7 +348,7 @@ export function generateHTML(env) {
             flex: 1;
             overflow-y: auto;
             min-height: 0;
-            max-height: 300px;
+            max-height: 400px; /* 限制最大高度 */
         }
         
         .asset-item {
@@ -510,6 +438,7 @@ export function generateHTML(env) {
             flex: 1;
             overflow-y: auto;
             min-height: 0;
+            max-height: 400px; /* 限制最大高度 */
         }
         
         .history-item {
@@ -539,85 +468,45 @@ export function generateHTML(env) {
             font-size: 11px;
         }
         
-        /* Statistics Section */
-        .stats-overview {
+        /* 简化的 Statistics Section */
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
+            margin-top: 20px;
         }
         
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
         }
         
-        .stat-card:nth-child(2) {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.2);
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
         
-        .stat-card:nth-child(3) {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.2);
+        .stat-icon {
+            font-size: 2.5rem;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
         }
         
         .stat-card h3 {
-            font-size: 0.9rem;
-            font-weight: 500;
+            font-size: 1rem;
+            color: var(--text-secondary);
             margin-bottom: 10px;
-            opacity: 0.9;
         }
         
         .stat-value {
             font-size: 2.2rem;
             font-weight: 700;
+            color: var(--primary-color);
             line-height: 1;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 25px;
-        }
-        
-        @media (min-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (min-width: 1200px) {
-            .stats-grid {
-                grid-template-columns: 2fr 1fr 1fr;
-            }
-        }
-        
-        .stats-panel {
-            background: var(--card-bg);
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            overflow: hidden;
-        }
-        
-        .stats-panel h3 {
-            background: linear-gradient(to right, var(--secondary-color), #2ea44f);
-            color: white;
-            padding: 15px 20px;
-            font-size: 1rem;
-            font-weight: 600;
-        }
-        
-        .chart-container, .list-container {
-            padding: 20px;
-            min-height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
         }
         
         /* Loading States */
@@ -709,18 +598,6 @@ export function generateHTML(env) {
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            animation: modalSlideIn 0.3s ease-out;
-        }
-        
-        @keyframes modalSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
         
         .modal-header {
@@ -769,38 +646,76 @@ export function generateHTML(env) {
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             display: none;
             z-index: 1001;
-            animation: toastSlideIn 0.3s ease-out;
-        }
-        
-        @keyframes toastSlideIn {
-            from {
-                opacity: 0;
-                transform: translateX(100px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
         }
         
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
         
         ::-webkit-scrollbar-track {
             background: #f1f1f1;
-            border-radius: 4px;
+            border-radius: 3px;
         }
         
         ::-webkit-scrollbar-thumb {
             background: #c1c1c1;
-            border-radius: 4px;
+            border-radius: 3px;
         }
         
         ::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
+        }
+        
+        /* 简化右侧面板 */
+        .simple-stats {
+            margin-top: 20px;
+        }
+        
+        .simple-stats-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .simple-stats-item:last-child {
+            border-bottom: none;
+        }
+        
+        .simple-stats-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .simple-stats-value {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 15px;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ccc;
+        }
+        
+        .status-dot.online {
+            background-color: #2ea44f;
+        }
+        
+        .status-dot.offline {
+            background-color: #c62828;
         }
     </style>
 </head>
@@ -821,49 +736,6 @@ export function generateHTML(env) {
             </div>
         </header>
         
-        <section id="api-docs" class="hidden">
-            <h2><i class="fas fa-code"></i> API 文档</h2>
-            <div class="docs-content">
-                <p>本代理服务提供以下 API 供开发者使用：</p>
-                
-                <div class="api-endpoint">
-                    <h3>1. 获取仓库列表</h3>
-                    <div class="method">GET /api/repos</div>
-                    <p>返回配置的所有 GitHub 仓库列表。</p>
-                </div>
-                
-                <div class="api-endpoint">
-                    <h3>2. 获取最新版本信息</h3>
-                    <div class="method">GET /api/latest</div>
-                    <p>返回所有仓库的最新版本和前 5 个历史版本。</p>
-                </div>
-                
-                <div class="api-endpoint">
-                    <h3>3. 获取指定仓库所有版本</h3>
-                    <div class="method">GET /api/all?owner={owner}&repo={repo}</div>
-                    <p>返回指定仓库的所有版本信息。</p>
-                </div>
-                
-                <div class="api-endpoint">
-                    <h3>4. 获取仓库详情</h3>
-                    <div class="method">GET /api/repo?owner={owner}&repo={repo}</div>
-                    <p>返回指定仓库的最新版本和最近 10 个历史版本。</p>
-                </div>
-                
-                <div class="api-endpoint">
-                    <h3>5. 代理下载文件</h3>
-                    <div class="method">GET /api/download?owner={owner}&repo={repo}&assetId={id}&filename={name}</div>
-                    <p>代理下载 GitHub Releases 中的资源文件。</p>
-                </div>
-                
-                <div class="api-endpoint">
-                    <h3>6. 刷新缓存</h3>
-                    <div class="method">GET /api/refresh</div>
-                    <p>刷新 API 缓存数据。</p>
-                </div>
-            </div>
-        </section>
-        
         <div class="main-grid">
             <div class="left-column">
                 <section>
@@ -872,7 +744,7 @@ export function generateHTML(env) {
                         <p><strong>服务说明：</strong>本服务提供 GitHub Releases 的代理访问和下载，解决国内访问 GitHub 缓慢的问题。</p>
                         <p><strong>使用方法：</strong>直接点击文件下载按钮即可通过代理下载，支持断点续传。</p>
                         <p><strong>数据更新：</strong>数据每 5 分钟自动刷新，也可以点击"手动刷新"按钮立即更新。</p>
-                        <p><strong>API 文档：</strong>开发者可以查看完整的 API 文档进行集成开发。</p>
+                        <p><strong>支持仓库：</strong>需要在配置文件中添加 GitHub 仓库地址。</p>
                     </div>
                 </section>
                 
@@ -923,49 +795,57 @@ export function generateHTML(env) {
                 <section>
                     <h2><i class="fas fa-chart-line"></i> 数据统计</h2>
                     <div class="section-content">
-                        <div class="stats-overview">
+                        <div class="stats-grid">
                             <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-database"></i>
+                                </div>
                                 <h3>仓库总数</h3>
                                 <div class="stat-value" id="totalRepos">-</div>
                             </div>
                             <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-tags"></i>
+                                </div>
                                 <h3>版本总数</h3>
                                 <div class="stat-value" id="totalReleases">-</div>
                             </div>
                             <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-file-archive"></i>
+                                </div>
                                 <h3>文件总数</h3>
                                 <div class="stat-value" id="totalAssets">-</div>
                             </div>
                         </div>
                         
-                        <div class="stats-grid">
-                            <div class="stats-panel">
-                                <h3>热门仓库 (Top 5)</h3>
-                                <div class="list-container" id="topRepos">
-                                    <p style="text-align: center; color: var(--text-secondary);">数据加载中...</p>
-                                </div>
+                        <div class="simple-stats">
+                            <div class="simple-stats-item">
+                                <span class="simple-stats-label">热门仓库</span>
+                                <span class="simple-stats-value" id="topRepoName">-</span>
                             </div>
-                            <div class="stats-panel">
-                                <h3>最近更新</h3>
-                                <div class="list-container" id="recentUpdates">
-                                    <p style="text-align: center; color: var(--text-secondary);">数据加载中...</p>
-                                </div>
+                            <div class="simple-stats-item">
+                                <span class="simple-stats-label">最近更新</span>
+                                <span class="simple-stats-value" id="lastRepoUpdate">-</span>
                             </div>
-                            <div class="stats-panel">
-                                <h3>服务状态</h3>
-                                <div class="list-container">
-                                    <div style="text-align: center;">
-                                        <div style="margin-bottom: 10px;">
-                                            <span id="apiStatusText" style="color: var(--accent-color);">
-                                                <i class="fas fa-circle" style="font-size: 12px;"></i> 检查中...
-                                            </span>
-                                        </div>
-                                        <div style="font-size: 12px; color: var(--text-secondary);">
-                                            最后检查: <span id="lastCheckTime">-</span>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="simple-stats-item">
+                                <span class="simple-stats-label">平均版本数</span>
+                                <span class="simple-stats-value" id="avgReleases">-</span>
                             </div>
+                            <div class="simple-stats-item">
+                                <span class="simple-stats-label">服务状态</span>
+                                <span class="status-indicator">
+                                    <span class="status-dot" id="statusDot"></span>
+                                    <span id="apiStatusText">检查中...</span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; font-size: 13px; color: var(--text-secondary);">
+                            <p style="margin-bottom: 10px;"><strong>统计说明：</strong></p>
+                            <p>• 统计基于当前加载的仓库数据</p>
+                            <p>• 点击"手动刷新"更新数据</p>
+                            <p>• 所有下载通过代理进行</p>
                         </div>
                     </div>
                 </section>
@@ -975,7 +855,6 @@ export function generateHTML(env) {
         <footer>
             <p>GitHub Releases Proxy Service v1.0</p>
             <p>数据来源：<span id="repoSource">GitHub API</span> • 部署于 Cloudflare Workers</p>
-            <p>如有问题，请通过 GitHub Issues 反馈</p>
         </footer>
     </div>
     
@@ -1005,25 +884,7 @@ export function generateHTML(env) {
             loadLatestReleases();
             setupSearch();
             checkApiStatus();
-            setupApiDocsToggle();
         });
-        
-        // 设置 API 文档显示/隐藏
-        function setupApiDocsToggle() {
-            const apiDocsBtn = document.querySelector('.btn[href="/api-docs"]');
-            const apiDocsSection = document.getElementById('api-docs');
-            
-            if (apiDocsBtn && apiDocsSection) {
-                apiDocsBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    apiDocsSection.classList.toggle('hidden');
-                    window.scrollTo({
-                        top: apiDocsSection.offsetTop - 20,
-                        behavior: 'smooth'
-                    });
-                });
-            }
-        }
         
         // 加载最新版本数据
         async function loadLatestReleases() {
@@ -1039,7 +900,7 @@ export function generateHTML(env) {
                     allReposData = data.data;
                     displayRepos(allReposData);
                     updateStats(data);
-                    updateStatistics(data);
+                    updateSimpleStatistics(data);
                 } else {
                     showError(data.error || '加载数据失败');
                 }
@@ -1047,7 +908,6 @@ export function generateHTML(env) {
                 showError('网络错误: ' + error.message);
             } finally {
                 hideLoading();
-                updateLastCheckTime();
             }
         }
         
@@ -1094,9 +954,27 @@ export function generateHTML(env) {
             });
             
             repoListEl.innerHTML = html;
+            
+            // 动态调整历史版本高度
+            setTimeout(() => adjustHistoryHeights(), 100);
         }
         
-        // 生成仓库卡片（使用原来的函数，但适应新设计）
+        // 调整历史版本高度
+        function adjustHistoryHeights() {
+            document.querySelectorAll('.repo-card').forEach(card => {
+                const assetsList = card.querySelector('.assets-list');
+                const historyList = card.querySelector('.history-list');
+                
+                if (assetsList && historyList) {
+                    // 获取左边构建包的实际高度
+                    const assetsHeight = assetsList.scrollHeight;
+                    // 设置右边历史版本的最大高度与左边相同
+                    historyList.style.maxHeight = assetsHeight + 'px';
+                }
+            });
+        }
+        
+        // 生成仓库卡片
         function generateRepoCard(repo) {
             if (repo.error) {
                 return \`
@@ -1218,9 +1096,11 @@ export function generateHTML(env) {
             </div>\`;
         }
         
-        // 更新统计数据
-        function updateStatistics(data) {
+        // 更新简化统计数据
+        function updateSimpleStatistics(data) {
             const reposWithData = data.data.filter(repo => !repo.error);
+            
+            if (reposWithData.length === 0) return;
             
             // 基础统计
             const totalRepos = reposWithData.length;
@@ -1233,69 +1113,29 @@ export function generateHTML(env) {
             document.getElementById('totalAssets').textContent = totalAssets;
             
             // 热门仓库（按版本数排序）
-            const topRepos = [...reposWithData]
-                .sort((a, b) => (b.totalReleases || 0) - (a.totalReleases || 0))
-                .slice(0, 5);
+            const topRepo = [...reposWithData]
+                .sort((a, b) => (b.totalReleases || 0) - (a.totalReleases || 0))[0];
             
-            let topReposHTML = '';
-            topRepos.forEach((repo, index) => {
-                topReposHTML += \`
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="background: var(--bg-color); color: var(--text-secondary); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">
-                            \${index + 1}
-                        </span>
-                        <div>
-                            <div style="font-weight: 500; font-size: 14px;">\${repo.repo}</div>
-                            <div style="font-size: 12px; color: var(--text-secondary);">\${repo.totalReleases || 0} 个版本</div>
-                        </div>
-                    </div>
-                    <a href="\${repo.url}" target="_blank" style="color: var(--secondary-color); font-size: 12px;">
-                        <i class="fas fa-external-link-alt"></i>
-                    </a>
-                </div>\`;
-            });
-            
-            if (topReposHTML) {
-                document.getElementById('topRepos').innerHTML = topReposHTML;
+            if (topRepo) {
+                document.getElementById('topRepoName').textContent = \`\${topRepo.repo} (\${topRepo.totalReleases || 0})\`;
             }
             
             // 最近更新
-            const recentUpdates = [...reposWithData]
+            const lastUpdatedRepo = [...reposWithData]
                 .filter(repo => repo.latest && repo.latest.published_at)
-                .sort((a, b) => new Date(b.latest.published_at) - new Date(a.latest.published_at))
-                .slice(0, 5);
+                .sort((a, b) => new Date(b.latest.published_at) - new Date(a.latest.published_at))[0];
             
-            let recentUpdatesHTML = '';
-            recentUpdates.forEach(repo => {
-                const timeAgo = formatTime(repo.latest.published_at);
-                recentUpdatesHTML += \`
-                <div style="padding: 10px 0; border-bottom: 1px solid var(--border-color);">
-                    <div style="font-weight: 500; font-size: 14px; margin-bottom: 5px;">\${repo.repo}</div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="font-size: 12px; color: var(--text-secondary);">\${repo.latest.tag_name}</div>
-                        <div style="font-size: 11px; color: var(--text-secondary);">\${timeAgo}</div>
-                    </div>
-                </div>\`;
-            });
-            
-            if (recentUpdatesHTML) {
-                document.getElementById('recentUpdates').innerHTML = recentUpdatesHTML;
+            if (lastUpdatedRepo && lastUpdatedRepo.latest) {
+                const timeAgo = formatTime(lastUpdatedRepo.latest.published_at);
+                document.getElementById('lastRepoUpdate').textContent = \`\${lastUpdatedRepo.repo} • \${timeAgo}\`;
             }
+            
+            // 平均版本数
+            const avgReleases = Math.round(totalReleases / totalRepos);
+            document.getElementById('avgReleases').textContent = avgReleases;
         }
         
-        // 更新最后检查时间
-        function updateLastCheckTime() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('zh-CN', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            document.getElementById('lastCheckTime').textContent = timeStr;
-        }
-        
-        // 保持原有的其他函数不变...
+        // 保持原有的其他函数...
         // 显示历史版本详情
         async function showHistoryDetails(repoFullName, tagName) {
             showLoading();
@@ -1355,16 +1195,17 @@ export function generateHTML(env) {
             if (release.assets && release.assets.length > 0) {
                 assetsHTML = \`
                 <h4 style="margin-top: 20px; margin-bottom: 10px;">资源文件</h4>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                    <thead>
-                        <tr style="background-color: var(--bg-color);">
-                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color);">文件名</th>
-                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color);">大小</th>
-                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color);">下载次数</th>
-                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color);">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>\`;
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <thead>
+                            <tr style="background-color: var(--bg-color);">
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color);">文件名</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color);">大小</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color);">下载次数</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color);">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>\`;
                 
                 release.assets.forEach(asset => {
                     const size = formatFileSize(asset.size);
@@ -1387,7 +1228,7 @@ export function generateHTML(env) {
                     </tr>\`;
                 });
                 
-                assetsHTML += '</tbody></table>';
+                assetsHTML += '</tbody></table></div>';
             } else {
                 assetsHTML = '<p>无资源文件</p>';
             }
@@ -1479,8 +1320,6 @@ export function generateHTML(env) {
         function updateStats(data) {
             const reposWithData = data.data.filter(repo => !repo.error);
             const totalReleases = reposWithData.reduce((sum, repo) => sum + (repo.totalReleases || 0), 0);
-            const totalAssets = reposWithData.reduce((sum, repo) => 
-                sum + (repo.latest && repo.latest.assets ? repo.latest.assets.length : 0), 0);
             
             document.getElementById('repoCount').innerHTML = \`
                 <i class="fas fa-box"></i>
@@ -1508,18 +1347,24 @@ export function generateHTML(env) {
                 const response = await fetch(API_BASE + '/api/repos');
                 const data = await response.json();
                 
-                const statusEl = document.getElementById('apiStatusText');
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('apiStatusText');
+                
                 if (data.success) {
-                    statusEl.innerHTML = '<i class="fas fa-circle" style="color: #2ea44f; font-size: 12px;"></i> 运行正常';
-                    statusEl.style.color = '#2ea44f';
+                    statusDot.className = 'status-dot online';
+                    statusText.textContent = '运行正常';
+                    statusText.style.color = '#2ea44f';
                 } else {
-                    statusEl.innerHTML = '<i class="fas fa-circle" style="color: #c62828; font-size: 12px;"></i> 运行异常';
-                    statusEl.style.color = '#c62828';
+                    statusDot.className = 'status-dot offline';
+                    statusText.textContent = '运行异常';
+                    statusText.style.color = '#c62828';
                 }
             } catch (error) {
-                document.getElementById('apiStatusText').innerHTML = 
-                    '<i class="fas fa-circle" style="color: #c62828; font-size: 12px;"></i> 连接失败';
-                document.getElementById('apiStatusText').style.color = '#c62828';
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('apiStatusText');
+                statusDot.className = 'status-dot offline';
+                statusText.textContent = '连接失败';
+                statusText.style.color = '#c62828';
             }
         }
         
@@ -1635,6 +1480,11 @@ export function generateHTML(env) {
                 e.preventDefault();
                 refreshData();
             }
+        });
+        
+        // 窗口大小变化时重新调整高度
+        window.addEventListener('resize', () => {
+            setTimeout(() => adjustHistoryHeights(), 100);
         });
     </script>
 </body>
@@ -2817,3 +2667,4 @@ download_latest() {
 </body>
 </html>`;
 }
+
