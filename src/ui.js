@@ -19,6 +19,8 @@ export function generateHTML(env) {
             --border-color: #e1e4e8;
             --text-secondary: #586069;
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --sidebar-width: 280px;
+            --header-height: 70px;
         }
         
         * {
@@ -32,43 +34,223 @@ export function generateHTML(env) {
             background-color: var(--bg-color);
             color: var(--primary-color);
             line-height: 1.6;
+            min-height: 100vh;
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
+            padding-top: 0;
         }
         
+        /* Header Styles */
         header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        h1 {
-            color: var(--primary-color);
-            margin-bottom: 10px;
-            font-size: 2.5rem;
-        }
-        
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-        }
-        
-        .controls {
+            background: linear-gradient(135deg, var(--primary-color), #1a1e22);
+            color: white;
+            padding: 20px 30px;
+            margin: 0 -20px 30px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
             flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .header-content {
+            flex: 1;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+        }
+        
+        .actions {
+            display: flex;
             gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        
+        .btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2c974b;
+            border-color: #2c974b;
+        }
+        
+        /* Main Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (min-width: 992px) {
+            .main-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+        
+        /* Left Column */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        /* Right Column */
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        /* Section Styles */
+        section {
             background: var(--card-bg);
-            padding: 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        section > h2 {
+            background: linear-gradient(to right, var(--secondary-color), #2ea44f);
+            color: white;
+            padding: 18px 25px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        section > h2 i {
+            font-size: 1.2rem;
+        }
+        
+        .section-content {
+            padding: 25px;
+        }
+        
+        /* API Docs Section */
+        #api-docs {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        #api-docs.hidden {
+            display: none;
+        }
+        
+        .docs-content {
+            padding: 25px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .api-endpoint {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .api-endpoint:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .api-endpoint h3 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .method {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+        }
+        
+        /* Announcement Section */
+        .announcement-content {
+            padding: 25px;
+        }
+        
+        .announcement-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .announcement-content a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .announcement-content a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Controls Section */
+        .controls {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between;
         }
         
         .search-container {
@@ -83,7 +265,8 @@ export function generateHTML(env) {
             border: 1px solid var(--border-color);
             border-radius: 6px;
             font-size: 16px;
-            transition: border-color 0.3s;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background: var(--card-bg);
         }
         
         .search-input:focus {
@@ -102,7 +285,7 @@ export function generateHTML(env) {
         
         .stats {
             display: flex;
-            gap: 20px;
+            gap: 25px;
             color: var(--text-secondary);
             font-size: 14px;
         }
@@ -110,52 +293,27 @@ export function generateHTML(env) {
         .stats-item {
             display: flex;
             align-items: center;
-            gap: 5px;
-        }
-        
-        .btn {
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: background-color 0.3s;
-            display: flex;
-            align-items: center;
             gap: 8px;
         }
         
-        .btn:hover {
-            background-color: #0256b9;
-        }
-        
-        .btn-primary {
-            background-color: var(--accent-color);
-        }
-        
-        .btn-primary:hover {
-            background-color: #2c974b;
-        }
-        
-        .repo-list {
-            display: grid;
-            gap: 25px;
+        /* Repo List Section */
+        #repoList {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
         
         .repo-card {
-            background-color: var(--card-bg);
+            background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             overflow: hidden;
-            transition: box-shadow 0.3s;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
         }
         
         .repo-card:hover {
-            box-shadow: var(--shadow);
+            border-color: var(--secondary-color);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
         
         .repo-header {
@@ -172,7 +330,7 @@ export function generateHTML(env) {
         }
         
         .repo-name {
-            font-size: 20px;
+            font-size: 1.1rem;
             font-weight: 600;
             color: var(--secondary-color);
             text-decoration: none;
@@ -188,7 +346,7 @@ export function generateHTML(env) {
         .repo-tag {
             background-color: #f1f8ff;
             color: var(--secondary-color);
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 12px;
             font-size: 12px;
             font-weight: 600;
@@ -200,32 +358,45 @@ export function generateHTML(env) {
             word-break: break-all;
         }
         
+        /* Repo Content - 保持原来的布局但适应新设计 */
         .repo-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
+            display: flex;
             gap: 20px;
             padding: 20px;
+            align-items: stretch;
         }
         
         @media (max-width: 768px) {
             .repo-content {
-                grid-template-columns: 1fr;
+                flex-direction: column;
+            }
+            
+            .latest-release {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding-right: 0;
+                padding-bottom: 20px;
             }
         }
         
         .latest-release {
+            flex: 2;
             border-right: 1px solid var(--border-color);
             padding-right: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
         }
         
         .release-title {
-            font-size: 18px;
+            font-size: 1rem;
             font-weight: 600;
             margin-bottom: 15px;
             color: var(--primary-color);
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
         }
         
         .release-tag {
@@ -238,14 +409,18 @@ export function generateHTML(env) {
         
         .release-meta {
             color: var(--text-secondary);
-            font-size: 14px;
+            font-size: 13px;
             margin-bottom: 20px;
             display: flex;
             gap: 15px;
+            flex-shrink: 0;
         }
         
         .assets-list {
-            margin-top: 20px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+            max-height: 300px;
         }
         
         .asset-item {
@@ -275,51 +450,66 @@ export function generateHTML(env) {
         
         .asset-name {
             font-weight: 500;
+            font-size: 14px;
         }
         
         .asset-size {
             color: var(--text-secondary);
-            font-size: 12px;
+            font-size: 11px;
         }
         
         .asset-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
         
         .btn-small {
             padding: 6px 12px;
             font-size: 12px;
             border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
         
         .btn-download {
             background-color: var(--accent-color);
+            color: white;
+            border: none;
+            text-decoration: none;
         }
         
         .btn-download:hover {
             background-color: #2c974b;
+            color: white;
         }
         
         .history-section {
+            flex: 1;
             padding: 15px;
             background-color: #fafbfc;
             border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
         }
-        
+
         .history-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             margin-bottom: 15px;
             color: var(--primary-color);
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
         }
-        
+
         .history-list {
-            max-height: 300px;
+            flex: 1;
             overflow-y: auto;
+            min-height: 0;
         }
         
         .history-item {
@@ -341,13 +531,96 @@ export function generateHTML(env) {
             font-weight: 600;
             color: var(--secondary-color);
             margin-bottom: 5px;
+            font-size: 13px;
         }
         
         .history-date {
             color: var(--text-secondary);
-            font-size: 12px;
+            font-size: 11px;
         }
         
+        /* Statistics Section */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .stat-card:nth-child(2) {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.2);
+        }
+        
+        .stat-card:nth-child(3) {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.2);
+        }
+        
+        .stat-card h3 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+        
+        @media (min-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: 2fr 1fr 1fr;
+            }
+        }
+        
+        .stats-panel {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .stats-panel h3 {
+            background: linear-gradient(to right, var(--secondary-color), #2ea44f);
+            color: white;
+            padding: 15px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .chart-container, .list-container {
+            padding: 20px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+        
+        /* Loading States */
         .loading {
             text-align: center;
             padding: 60px 20px;
@@ -390,33 +663,8 @@ export function generateHTML(env) {
             color: #e1e4e8;
         }
         
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 30px;
-        }
-        
-        .page-btn {
-            padding: 8px 16px;
-            border: 1px solid var(--border-color);
-            background-color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .page-btn:hover {
-            background-color: var(--bg-color);
-        }
-        
-        .page-btn.active {
-            background-color: var(--secondary-color);
-            color: white;
-            border-color: var(--secondary-color);
-        }
-        
-        .footer {
+        /* Footer */
+        footer {
             text-align: center;
             margin-top: 50px;
             padding-top: 20px;
@@ -425,6 +673,20 @@ export function generateHTML(env) {
             font-size: 14px;
         }
         
+        footer p {
+            margin-bottom: 10px;
+        }
+        
+        footer a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -436,191 +698,285 @@ export function generateHTML(env) {
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
         
         .modal-content {
             background-color: white;
-            border-radius: 8px;
-            width: 90%;
+            border-radius: 10px;
+            width: 100%;
             max-width: 800px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .modal-header {
-            padding: 20px;
+            padding: 20px 25px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: linear-gradient(to right, var(--secondary-color), #2ea44f);
+            color: white;
         }
         
         .modal-title {
-            font-size: 20px;
+            font-size: 1.2rem;
             font-weight: 600;
         }
         
         .modal-close {
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
-            color: var(--text-secondary);
+            color: white;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+            line-height: 1;
+        }
+        
+        .modal-close:hover {
+            opacity: 1;
         }
         
         .modal-body {
-            padding: 20px;
+            padding: 25px;
         }
         
-        .history-details {
-            margin-top: 20px;
-        }
-        
-        .assets-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        .assets-table th,
-        .assets-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .assets-table th {
-            background-color: var(--bg-color);
-            font-weight: 600;
-        }
-        
-        .copy-btn {
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-        
-        .copy-btn:hover {
-            background-color: #5a6268;
-        }
-        
+        /* Toast */
         .toast {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 30px;
+            right: 30px;
             background-color: var(--accent-color);
             color: white;
-            padding: 12px 24px;
-            border-radius: 6px;
-            box-shadow: var(--shadow);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             display: none;
             z-index: 1001;
-            
-        }
-    .api-docs-link {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--secondary-color);
-            text-decoration: none;
-            font-weight: 500;
-            padding: 8px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background-color: var(--card-bg);
-            transition: all 0.3s;
+            animation: toastSlideIn 0.3s ease-out;
         }
         
-        .api-docs-link:hover {
-            background-color: var(--bg-color);
-            border-color: var(--secondary-color);
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
         
-        @media (max-width: 768px) {
-            .api-docs-link {
-                position: static;
-                margin-top: 15px;
-                align-self: center;
-            }
-            header {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <a href="/api-docs" class="api-docs-link">
-                <i class="fas fa-book"></i>
-                API 文档
-            </a>
-            <h1><i class="fas fa-code-branch"></i> GitHub Releases 代理服务</h1>
-            <p class="subtitle">快速、稳定地访问 GitHub Releases，支持代理下载和历史版本查看</p>
+            <div class="header-content">
+                <h1><i class="fas fa-code-branch"></i> GitHub Releases 代理服务</h1>
+                <p class="subtitle">快速、稳定地访问 GitHub Releases，支持代理下载和历史版本查看</p>
+            </div>
+            <div class="actions">
+                <a href="/api-docs" target="_blank" class="btn">
+                    <i class="fas fa-book"></i> API 文档
+                </a>
+                <button class="btn btn-primary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> 手动刷新
+                </button>
+            </div>
         </header>
         
-        <div class="controls">
-            <div class="search-container">
-                <input type="text" class="search-input" id="searchInput" placeholder="搜索仓库或文件...">
-                <i class="fas fa-search search-icon"></i>
+        <section id="api-docs" class="hidden">
+            <h2><i class="fas fa-code"></i> API 文档</h2>
+            <div class="docs-content">
+                <p>本代理服务提供以下 API 供开发者使用：</p>
+                
+                <div class="api-endpoint">
+                    <h3>1. 获取仓库列表</h3>
+                    <div class="method">GET /api/repos</div>
+                    <p>返回配置的所有 GitHub 仓库列表。</p>
+                </div>
+                
+                <div class="api-endpoint">
+                    <h3>2. 获取最新版本信息</h3>
+                    <div class="method">GET /api/latest</div>
+                    <p>返回所有仓库的最新版本和前 5 个历史版本。</p>
+                </div>
+                
+                <div class="api-endpoint">
+                    <h3>3. 获取指定仓库所有版本</h3>
+                    <div class="method">GET /api/all?owner={owner}&repo={repo}</div>
+                    <p>返回指定仓库的所有版本信息。</p>
+                </div>
+                
+                <div class="api-endpoint">
+                    <h3>4. 获取仓库详情</h3>
+                    <div class="method">GET /api/repo?owner={owner}&repo={repo}</div>
+                    <p>返回指定仓库的最新版本和最近 10 个历史版本。</p>
+                </div>
+                
+                <div class="api-endpoint">
+                    <h3>5. 代理下载文件</h3>
+                    <div class="method">GET /api/download?owner={owner}&repo={repo}&assetId={id}&filename={name}</div>
+                    <p>代理下载 GitHub Releases 中的资源文件。</p>
+                </div>
+                
+                <div class="api-endpoint">
+                    <h3>6. 刷新缓存</h3>
+                    <div class="method">GET /api/refresh</div>
+                    <p>刷新 API 缓存数据。</p>
+                </div>
+            </div>
+        </section>
+        
+        <div class="main-grid">
+            <div class="left-column">
+                <section>
+                    <h2><i class="fas fa-bell"></i> 公告</h2>
+                    <div class="announcement-content">
+                        <p><strong>服务说明：</strong>本服务提供 GitHub Releases 的代理访问和下载，解决国内访问 GitHub 缓慢的问题。</p>
+                        <p><strong>使用方法：</strong>直接点击文件下载按钮即可通过代理下载，支持断点续传。</p>
+                        <p><strong>数据更新：</strong>数据每 5 分钟自动刷新，也可以点击"手动刷新"按钮立即更新。</p>
+                        <p><strong>API 文档：</strong>开发者可以查看完整的 API 文档进行集成开发。</p>
+                    </div>
+                </section>
+                
+                <section>
+                    <h2><i class="fas fa-tag"></i> 版本信息</h2>
+                    <div class="section-content">
+                        <div class="controls">
+                            <div class="search-container">
+                                <input type="text" class="search-input" id="searchInput" placeholder="搜索仓库或文件...">
+                                <i class="fas fa-search search-icon"></i>
+                            </div>
+                            
+                            <div class="stats">
+                                <div class="stats-item" id="repoCount">
+                                    <i class="fas fa-box"></i>
+                                    <span>加载中...</span>
+                                </div>
+                                <div class="stats-item" id="releaseCount">
+                                    <i class="fas fa-tag"></i>
+                                    <span>加载中...</span>
+                                </div>
+                                <div class="stats-item" id="lastUpdated">
+                                    <i class="fas fa-clock"></i>
+                                    <span>加载中...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="loading" class="loading">
+                            <div class="loading-spinner"></div>
+                            <p>正在加载 GitHub Releases 数据...</p>
+                        </div>
+                        
+                        <div id="error" class="error" style="display: none;"></div>
+                        
+                        <div id="repoList" style="display: none;"></div>
+                        
+                        <div id="emptyState" class="empty-state" style="display: none;">
+                            <i class="fas fa-inbox"></i>
+                            <h3>没有找到仓库数据</h3>
+                            <p>请检查仓库列表配置或网络连接</p>
+                        </div>
+                    </div>
+                </section>
             </div>
             
-            <div class="stats">
-                <div class="stats-item" id="repoCount">
-                    <i class="fas fa-box"></i>
-                    <span>加载中...</span>
-                </div>
-                <div class="stats-item" id="releaseCount">
-                    <i class="fas fa-tag"></i>
-                    <span>加载中...</span>
-                </div>
-                <div class="stats-item" id="lastUpdated">
-                    <i class="fas fa-clock"></i>
-                    <span>加载中...</span>
-                </div>
+            <div class="right-column">
+                <section>
+                    <h2><i class="fas fa-chart-line"></i> 数据统计</h2>
+                    <div class="section-content">
+                        <div class="stats-overview">
+                            <div class="stat-card">
+                                <h3>仓库总数</h3>
+                                <div class="stat-value" id="totalRepos">-</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>版本总数</h3>
+                                <div class="stat-value" id="totalReleases">-</div>
+                            </div>
+                            <div class="stat-card">
+                                <h3>文件总数</h3>
+                                <div class="stat-value" id="totalAssets">-</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-grid">
+                            <div class="stats-panel">
+                                <h3>热门仓库 (Top 5)</h3>
+                                <div class="list-container" id="topRepos">
+                                    <p style="text-align: center; color: var(--text-secondary);">数据加载中...</p>
+                                </div>
+                            </div>
+                            <div class="stats-panel">
+                                <h3>最近更新</h3>
+                                <div class="list-container" id="recentUpdates">
+                                    <p style="text-align: center; color: var(--text-secondary);">数据加载中...</p>
+                                </div>
+                            </div>
+                            <div class="stats-panel">
+                                <h3>服务状态</h3>
+                                <div class="list-container">
+                                    <div style="text-align: center;">
+                                        <div style="margin-bottom: 10px;">
+                                            <span id="apiStatusText" style="color: var(--accent-color);">
+                                                <i class="fas fa-circle" style="font-size: 12px;"></i> 检查中...
+                                            </span>
+                                        </div>
+                                        <div style="font-size: 12px; color: var(--text-secondary);">
+                                            最后检查: <span id="lastCheckTime">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
-            
-            <button class="btn" onclick="refreshData()">
-                <i class="fas fa-sync-alt"></i>
-                刷新数据
-            </button>
         </div>
         
-        <div id="loading" class="loading">
-            <div class="loading-spinner"></div>
-            <p>正在加载 GitHub Releases 数据...</p>
-        </div>
-        
-        <div id="error" class="error" style="display: none;"></div>
-        
-        <div id="repoList" class="repo-list" style="display: none;"></div>
-        
-        <div id="emptyState" class="empty-state" style="display: none;">
-            <i class="fas fa-inbox"></i>
-            <h3>没有找到仓库数据</h3>
-            <p>请检查仓库列表配置或网络连接</p>
-        </div>
-        
-        <div class="footer">
-    <p>GitHub Releases Proxy v1.0 • 数据来源：<span id="repoSource">GitHub API</span></p>
-    <p id="apiStatus">API 状态：<span class="status-indicator">检查中...</span></p>
-    <p style="margin-top: 10px;">
-        <a href="/api-docs" style="color: var(--secondary-color); text-decoration: none;">
-            <i class="fas fa-book"></i> 查看 API 文档
-        </a>
-    </p>
-</div>
+        <footer>
+            <p>GitHub Releases Proxy Service v1.0</p>
+            <p>数据来源：<span id="repoSource">GitHub API</span> • 部署于 Cloudflare Workers</p>
+            <p>如有问题，请通过 GitHub Issues 反馈</p>
+        </footer>
     </div>
     
     <!-- 历史版本详情模态框 -->
@@ -649,7 +1005,25 @@ export function generateHTML(env) {
             loadLatestReleases();
             setupSearch();
             checkApiStatus();
+            setupApiDocsToggle();
         });
+        
+        // 设置 API 文档显示/隐藏
+        function setupApiDocsToggle() {
+            const apiDocsBtn = document.querySelector('.btn[href="/api-docs"]');
+            const apiDocsSection = document.getElementById('api-docs');
+            
+            if (apiDocsBtn && apiDocsSection) {
+                apiDocsBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    apiDocsSection.classList.toggle('hidden');
+                    window.scrollTo({
+                        top: apiDocsSection.offsetTop - 20,
+                        behavior: 'smooth'
+                    });
+                });
+            }
+        }
         
         // 加载最新版本数据
         async function loadLatestReleases() {
@@ -665,6 +1039,7 @@ export function generateHTML(env) {
                     allReposData = data.data;
                     displayRepos(allReposData);
                     updateStats(data);
+                    updateStatistics(data);
                 } else {
                     showError(data.error || '加载数据失败');
                 }
@@ -672,6 +1047,7 @@ export function generateHTML(env) {
                 showError('网络错误: ' + error.message);
             } finally {
                 hideLoading();
+                updateLastCheckTime();
             }
         }
         
@@ -709,7 +1085,7 @@ export function generateHTML(env) {
             }
             
             hideEmptyState();
-            repoListEl.style.display = 'grid';
+            repoListEl.style.display = 'block';
             
             let html = '';
             
@@ -720,11 +1096,11 @@ export function generateHTML(env) {
             repoListEl.innerHTML = html;
         }
         
-        // 生成仓库卡片
+        // 生成仓库卡片（使用原来的函数，但适应新设计）
         function generateRepoCard(repo) {
             if (repo.error) {
                 return \`
-                <div class="repo-card">
+                <div class="repo-card" style="margin-bottom: 20px;">
                     <div class="repo-header">
                         <div class="repo-title">
                             <a href="\${repo.url}" target="_blank" class="repo-name">
@@ -760,10 +1136,10 @@ export function generateHTML(env) {
                             </div>
                         </div>
                         <div class="asset-actions">
-                            <a href="\${asset.proxy_url}" class="btn btn-small btn-download" download>
+                            <a href="\${asset.proxy_url}" class="btn-small btn-download" download>
                                 <i class="fas fa-download"></i> 下载
                             </a>
-                            <button class="btn btn-small copy-btn" onclick="copyToClipboard('\${asset.proxy_url}', '下载链接已复制')">
+                            <button class="btn-small copy-btn" onclick="copyToClipboard('\${asset.proxy_url}', '下载链接已复制')">
                                 <i class="fas fa-copy"></i>
                             </button>
                         </div>
@@ -796,7 +1172,7 @@ export function generateHTML(env) {
             }
             
             return \`
-            <div class="repo-card">
+            <div class="repo-card" style="margin-bottom: 20px;">
                 <div class="repo-header">
                     <div class="repo-title">
                         <a href="\${repo.url}" target="_blank" class="repo-name">
@@ -826,7 +1202,7 @@ export function generateHTML(env) {
                         <div class="assets-list">
                             \${latestAssetsHTML}
                         </div>
-                        \` : '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">无发布版本</div>'}
+                        \` : '<div style="color: var(--text-secondary); text-align: center; padding: 20px; flex: 1;">无发布版本</div>'}
                     </div>
                     
                     <div class="history-section">
@@ -842,6 +1218,84 @@ export function generateHTML(env) {
             </div>\`;
         }
         
+        // 更新统计数据
+        function updateStatistics(data) {
+            const reposWithData = data.data.filter(repo => !repo.error);
+            
+            // 基础统计
+            const totalRepos = reposWithData.length;
+            const totalReleases = reposWithData.reduce((sum, repo) => sum + (repo.totalReleases || 0), 0);
+            const totalAssets = reposWithData.reduce((sum, repo) => 
+                sum + (repo.latest && repo.latest.assets ? repo.latest.assets.length : 0), 0);
+            
+            document.getElementById('totalRepos').textContent = totalRepos;
+            document.getElementById('totalReleases').textContent = totalReleases;
+            document.getElementById('totalAssets').textContent = totalAssets;
+            
+            // 热门仓库（按版本数排序）
+            const topRepos = [...reposWithData]
+                .sort((a, b) => (b.totalReleases || 0) - (a.totalReleases || 0))
+                .slice(0, 5);
+            
+            let topReposHTML = '';
+            topRepos.forEach((repo, index) => {
+                topReposHTML += \`
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="background: var(--bg-color); color: var(--text-secondary); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                            \${index + 1}
+                        </span>
+                        <div>
+                            <div style="font-weight: 500; font-size: 14px;">\${repo.repo}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">\${repo.totalReleases || 0} 个版本</div>
+                        </div>
+                    </div>
+                    <a href="\${repo.url}" target="_blank" style="color: var(--secondary-color); font-size: 12px;">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                </div>\`;
+            });
+            
+            if (topReposHTML) {
+                document.getElementById('topRepos').innerHTML = topReposHTML;
+            }
+            
+            // 最近更新
+            const recentUpdates = [...reposWithData]
+                .filter(repo => repo.latest && repo.latest.published_at)
+                .sort((a, b) => new Date(b.latest.published_at) - new Date(a.latest.published_at))
+                .slice(0, 5);
+            
+            let recentUpdatesHTML = '';
+            recentUpdates.forEach(repo => {
+                const timeAgo = formatTime(repo.latest.published_at);
+                recentUpdatesHTML += \`
+                <div style="padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                    <div style="font-weight: 500; font-size: 14px; margin-bottom: 5px;">\${repo.repo}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="font-size: 12px; color: var(--text-secondary);">\${repo.latest.tag_name}</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">\${timeAgo}</div>
+                    </div>
+                </div>\`;
+            });
+            
+            if (recentUpdatesHTML) {
+                document.getElementById('recentUpdates').innerHTML = recentUpdatesHTML;
+            }
+        }
+        
+        // 更新最后检查时间
+        function updateLastCheckTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('lastCheckTime').textContent = timeStr;
+        }
+        
+        // 保持原有的其他函数不变...
         // 显示历史版本详情
         async function showHistoryDetails(repoFullName, tagName) {
             showLoading();
@@ -901,13 +1355,13 @@ export function generateHTML(env) {
             if (release.assets && release.assets.length > 0) {
                 assetsHTML = \`
                 <h4 style="margin-top: 20px; margin-bottom: 10px;">资源文件</h4>
-                <table class="assets-table">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                     <thead>
-                        <tr>
-                            <th>文件名</th>
-                            <th>大小</th>
-                            <th>下载次数</th>
-                            <th>操作</th>
+                        <tr style="background-color: var(--bg-color);">
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color);">文件名</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color);">大小</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color);">下载次数</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color);">操作</th>
                         </tr>
                     </thead>
                     <tbody>\`;
@@ -916,17 +1370,17 @@ export function generateHTML(env) {
                     const size = formatFileSize(asset.size);
                     assetsHTML += \`
                     <tr>
-                        <td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">
                             <i class="fas fa-file-archive"></i>
                             \${asset.name}
                         </td>
-                        <td>\${size}</td>
-                        <td>\${asset.download_count || 0}</td>
-                        <td>
-                            <a href="\${asset.proxy_url}" class="btn btn-small btn-download" download>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">\${size}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">\${asset.download_count || 0}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid var(--border-color);">
+                            <a href="\${asset.proxy_url}" class="btn-small btn-download" download style="margin-right: 5px;">
                                 <i class="fas fa-download"></i> 下载
                             </a>
-                            <button class="btn btn-small copy-btn" onclick="copyToClipboard('\${asset.proxy_url}')">
+                            <button class="btn-small copy-btn" onclick="copyToClipboard('\${asset.proxy_url}')">
                                 <i class="fas fa-copy"></i>
                             </button>
                         </td>
@@ -995,7 +1449,7 @@ export function generateHTML(env) {
                     \` : ''}
                     
                     <div style="margin-top: 10px;">
-                        <button class="btn btn-small" onclick="showHistoryDetails('\${repoFullName}', '\${release.tag_name}')">
+                        <button class="btn-small" onclick="showHistoryDetails('\${repoFullName}', '\${release.tag_name}')" style="background: var(--secondary-color); color: white; border: none;">
                             <i class="fas fa-eye"></i> 查看详情
                         </button>
                     </div>
@@ -1035,7 +1489,7 @@ export function generateHTML(env) {
             
             document.getElementById('releaseCount').innerHTML = \`
                 <i class="fas fa-tag"></i>
-                <span>\${totalReleases} 个版本 • \${totalAssets} 个文件</span>
+                <span>\${totalReleases} 个版本</span>
             \`;
             
             document.getElementById('lastUpdated').innerHTML = \`
@@ -1054,15 +1508,18 @@ export function generateHTML(env) {
                 const response = await fetch(API_BASE + '/api/repos');
                 const data = await response.json();
                 
-                const statusEl = document.querySelector('#apiStatus .status-indicator');
+                const statusEl = document.getElementById('apiStatusText');
                 if (data.success) {
-                    statusEl.innerHTML = '<span style="color: #2ea44f;"><i class="fas fa-check-circle"></i> 正常</span>';
+                    statusEl.innerHTML = '<i class="fas fa-circle" style="color: #2ea44f; font-size: 12px;"></i> 运行正常';
+                    statusEl.style.color = '#2ea44f';
                 } else {
-                    statusEl.innerHTML = '<span style="color: #c62828;"><i class="fas fa-times-circle"></i> 异常</span>';
+                    statusEl.innerHTML = '<i class="fas fa-circle" style="color: #c62828; font-size: 12px;"></i> 运行异常';
+                    statusEl.style.color = '#c62828';
                 }
             } catch (error) {
-                document.querySelector('#apiStatus .status-indicator').innerHTML = 
-                    '<span style="color: #c62828;"><i class="fas fa-times-circle"></i> 连接失败</span>';
+                document.getElementById('apiStatusText').innerHTML = 
+                    '<i class="fas fa-circle" style="color: #c62828; font-size: 12px;"></i> 连接失败';
+                document.getElementById('apiStatusText').style.color = '#c62828';
             }
         }
         
@@ -1105,6 +1562,7 @@ export function generateHTML(env) {
         // 显示/隐藏加载状态
         function showLoading() {
             document.getElementById('loading').style.display = 'block';
+            document.getElementById('repoList').style.display = 'none';
         }
         
         function hideLoading() {
@@ -1123,6 +1581,7 @@ export function generateHTML(env) {
         
         function showEmptyState() {
             document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('repoList').style.display = 'none';
         }
         
         function hideEmptyState() {
@@ -1137,9 +1596,10 @@ export function generateHTML(env) {
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
-        
+
         // 工具函数：格式化日期
         function formatDate(dateString) {
+            if (!dateString) return '未知';
             const date = new Date(dateString);
             return date.toLocaleDateString('zh-CN', {
                 year: 'numeric',
