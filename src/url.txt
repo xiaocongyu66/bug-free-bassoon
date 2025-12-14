@@ -1,5 +1,7 @@
 https://github.com/FCL-Team/FoldCraftLauncher
 https://github.com/ShirosakiMio/FCLRendererPlugin
+https://github.com/ZalithLauncher/ZalithLauncher
+https://github.com/ZalithLauncher/ZalithLauncher2
 https://github.com/HMCL-dev/HMCL
 https://github.com/Meloong-Git/PCL
 
